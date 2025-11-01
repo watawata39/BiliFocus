@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "BiliFocus",
+  "version": "1.6.1",
+  "description": "Use bilibili.com without the bloody distractions that destroys your focus. Also removes ads.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["*://*.bilibili.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "128": "icons/logo128.png",
+    "48": "icons/logo48.png",
+    "16": "icons/logo16.png"
+  }
+}

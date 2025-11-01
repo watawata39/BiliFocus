@@ -1,0 +1,9 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+._*
+
+# other files
+peripherals/
+website/
+git_commands.txt

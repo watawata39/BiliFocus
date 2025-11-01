@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <title>Checkbox Group Example</title>
+    <style>
+      :root {
+        /* Light theme colors */
+        --bg-color: #ffffff;
+        --text-color: #333333;
+        --border-color: #cccccc;
+        --group-border: #808080;
+        --modal-bg: #ffffff;
+        --modal-text: #333333;
+        --feedback-color: #808080;
+        --feedback-hover: #708090;
+        --btn-bg: #007bff;
+        --btn-hover: #0056b3;
+        --btn-active: #004494;
+      }
+
+      [data-theme="dark"] {
+        /* Dark theme colors */
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --border-color: #404040;
+        --group-border: #666666;
+        --modal-bg: #2d2d2d;
+        --modal-text: #e0e0e0;
+        --feedback-color: #999999;
+        --feedback-hover: #b0b0b0;
+        --btn-bg: #0066cc;
+        --btn-hover: #004499;
+        --btn-active: #003377;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        margin-bottom: 5px;
+        padding: 10px;
+        width: 320px;
+        user-select: none;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      .choices_container {
+        padding: 15px;
+        margin-bottom: 5px;
+        max-height: 350px;
+        overflow-y: scroll;
+        scrollbar-width: thin;
+        scrollbar-color: var(--group-border) transparent;
+        background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      }
+
+      /* Webkit scrollbar styling for Chrome/Safari */
+      .choices_container::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .choices_container::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .choices_container::-webkit-scrollbar-thumb {
+        background: var(--group-border);
+        border-radius: 4px;
+        border: 2px solid var(--bg-color);
+      }
+
+      .choices_container::-webkit-scrollbar-thumb:hover {
+        background: var(--text-color);
+      }
+
+      .title {
+        font-size: 24px;
+        margin-bottom: 8px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      }
+
+      .group-title {
+        font-size: 18px;
+        margin: 10px 0;
+        cursor: pointer;
+        font-weight: bold;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        border: 1px solid var(--group-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.1);
+      }
+
+      .group-title:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.15);
+      }
+
+      .group-title:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 2px rgba(0,0,0,0.1);
+      }
+
+      .group-title::after {
+        content: '▼';
+        font-size: 12px;
+        color: var(--text-color);
+        transition: transform 0.3s ease;
+      }
+
+      .group-title.collapsed::after {
+        transform: rotate(90deg);
+      }
+
+      .group-content {
+        display: none;
+        margin-left: 20px;
+      }
+
+      .group-content label {
+        margin-top: -5px;
+      }
+
+      span {
+        margin-left: 5px;
+      }
+
+      strong {
+        font-size: 14px;
+        color: var(--text-color);
+        display: block;
+        margin-top: 15px;
+        text-align: justify;
+      }
+
+      label {
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        margin-bottom: 10px;
+        margin-top: -5px;
+        cursor: pointer;
+        transition: color 0.2s ease;
+      }
+
+      label:hover {
+        color: var(--btn-bg);
+      }
+      
+      input[type="checkbox"] {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--group-border);
+        border-radius: 50%;
+        background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-right: 10px;
+        flex-shrink: 0;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      }
+
+      input[type="checkbox"]:hover {
+        transform: scale(1.1);
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      input[type="checkbox"]:checked {
+        background: linear-gradient(145deg, var(--btn-bg), #0056b3);
+        border-color: var(--btn-bg);
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.2), 0 2px 4px rgba(0,123,255,0.3);
+      }
+
+      input[type="checkbox"]:active {
+        transform: scale(0.95);
+      }
+
+      #bottom-btn {
+        background: linear-gradient(145deg, var(--btn-bg), #0056b3);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+        margin-top: 10px;
+        position: relative;
+        box-shadow: 0 4px 8px rgba(0,123,255,0.3), inset 0 1px 3px rgba(255,255,255,0.2);
+      }
+
+      #bottom-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,123,255,0.4), inset 0 1px 3px rgba(255,255,255,0.2);
+      }
+
+      #bottom-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3), inset 0 1px 3px rgba(0,0,0,0.2);
+      }
+
+      #feedback-link {
+        display: inline-block;
+        font-size: 14px;
+        color: var(--feedback-color);
+        text-decoration: none;
+        margin-top: 10px;
+        cursor: pointer;
+        text-align: center;
+        width: 100%;
+      }
+
+      #feedback-link:hover {
+        text-decoration: underline;
+        color: var(--feedback-hover);
+      }
+
+
+
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(128, 128, 128, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      .modal-content {
+        background: var(--modal-bg);
+        padding: 25px;
+        border-radius: 8px;
+        max-width: 280px;
+        text-align: center;
+        font-size: 14px;
+        color: var(--modal-text);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        user-select: text;
+        border: none;
+      }
+
+      #modal-close-btn {
+        margin-top: 15px;
+        background: linear-gradient(145deg, var(--btn-bg), #0056b3);
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
+      }
+
+      #modal-close-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0,123,255,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+      }
+
+      #modal-close-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0,123,255,0.3), inset 0 1px 2px rgba(0,0,0,0.2);
+      }
+
+      #language-btn {
+        background: linear-gradient(145deg, var(--btn-bg), #0056b3);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 6px;
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
+      }
+
+      #language-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0,123,255,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+      }
+
+      #language-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0,123,255,0.3), inset 0 1px 2px rgba(0,0,0,0.2);
+      }
+
+    </style>
+  </head>
+  <div id="custom-alert" class="modal-overlay">
+    <div class="modal-content">
+      <p id="modal-text" style="white-space: pre-line;">意见反馈请发邮件至 waterlemon0096@gmail.com。</p>
+      <button id="modal-close-btn">OK</button>
+    </div>
+  </div>
+  <body data-theme="light">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: -5px 0 8px 0;">
+      <strong class="title" id="main-title">选择要隐藏的东西</strong>
+      <button id="language-btn">中</button>
+    </div>
+
+    <!--
+    To add new options, edit the map 'defaults' in popup.js
+    and the maps 'settings' and 'modifications' in the content script
+    add to the option change callbacks if necessary
+    -->
+
+    <div class="choices_container">
+    <label>
+      <input type="checkbox" id="homepagerecom">
+      <span id="homepagerecom-text">首页推荐</span>
+    </label>
+    <label>
+      <input type="checkbox" id="vidrecom">
+      <span id="vidrecom-text">视频推荐</span>
+    </label>
+    <label>
+      <input type="checkbox" id="comments">
+      <span id="comments-text">评论区</span>
+    </label>
+
+    <div class="group">
+      <div class="group-title" data-group="group_general" id="group_general-title">一般</div>
+      <div class="group-content" id="group_general">
+        <label>
+          <input type="checkbox" id="searchrecom">
+          <span id="searchrecom-text">搜索推荐</span>
+        </label>
+        <label>
+          <input type="checkbox" id="leftnavi">
+          <span id="leftnavi-text">左上导航栏</span>
+        </label>
+        <label>
+          <input type="checkbox" id="ads">
+          <span id="ads-text">广告</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-title" data-group="right_navi_general" id="right_navi_general-title">右上导航栏</div>
+      <div class="group-content" id="right_navi_general">
+        <label>
+          <input type="checkbox" id="membership">
+          <span id="membership-text">大会员图标</span>
+        </label>
+        <label>
+          <input type="checkbox" id="messages">
+          <span id="messages-text">消息图标</span>
+        </label>
+        <label>
+          <input type="checkbox" id="dongtai">
+          <span id="dongtai-text">动态图标</span>
+        </label>
+        <label>
+          <input type="checkbox" id="favourites">
+          <span id="favourites-text">收藏图标</span>
+        </label>
+        <label>
+          <input type="checkbox" id="history">
+          <span id="history-text">历史图标</span>
+        </label>
+        <label>
+          <input type="checkbox" id="tougao">
+          <span id="tougao-text">投稿图标</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-title" data-group="personal_page" id="personal_page-title">个人主页</div>
+      <div class="group-content" id="personal_page">
+        <label>
+          <input type="checkbox" id="myvideos">
+          <span id="myvideos-text">我的视频</span>
+        </label>
+        <label>
+          <input type="checkbox" id="myfavourites">
+          <span id="myfavourites-text">收藏夹</span>
+        </label>
+        <label>
+          <input type="checkbox" id="subanimes">
+          <span id="subanimes-text">订阅番剧</span>
+        </label>
+        <label>
+          <input type="checkbox" id="recentcoins">
+          <span id="recentcoins-text">最近投币的视频</span>
+        </label>
+        <label>
+          <input type="checkbox" id="collections">
+          <span id="collections-text">合集和视频列表</span>
+        </label>
+        <label>
+          <input type="checkbox" id="columns">
+          <span id="columns-text">专栏</span>
+        </label>
+        <label>
+          <input type="checkbox" id="recentlikes">
+          <span id="recentlikes-text">最近点赞的视频</span>
+        </label>
+        <label>
+          <input type="checkbox" id="usrpageleftsidebar">
+          <span id="usrpageleftsidebar-text">左侧边栏</span>
+        </label>
+      </div>
+    </div>
+
+    </div>
+
+    <button id="bottom-btn" title="Toggle all options"><span id="bottom-btn-text" style="font-style: normal;"></span></button>
+
+    <a href="#" id="feedback-link"><span id="feedback-text" style="font-style: normal;">意见反馈</span></a>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
