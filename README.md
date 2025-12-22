@@ -4,13 +4,20 @@ A Chrome extension that helps you use bilibili.com without distractions by hidin
 
 ## Features
 
-- **Hide Recommendations**: Remove homepage and video recommendations
-- **Hide Comments**: Remove comment sections
-- **Hide Navigation**: Customize top-left and top-right navigation bars
-- **Hide Search Recommendations**: Remove trending and search suggestions
-- **Remove Ads**: Block advertisements throughout the site
-- **Personal Page Customization**: Hide specific sections on your personal homepage (videos, favorites, subscriptions, etc.)
-- **Customizable**: Toggle individual features on/off via the extension popup
+- **Enhanced Visibility Control**  
+  Easily hide or display specific Bilibili sections, such as homepage recommendations, comments, sidebars, ads, and personal homepage modules, giving you a cleaner, distraction-free view.
+
+- **Customizable Settings (Instant Apply)**  
+  Save your preferences and have every change applied instantly.
+
+- **Productivity Shortcut**  
+  Press `/` to instantly focus the search bar (YouTube-style), enabling fast keyboard-based searching.
+
+- **Multilingual Interface**  
+  A clean interface available in Chinese, English, and Japanese.
+
+- **Simple and User-Friendly**  
+  An intuitive layout makes customizing your Bilibili experience fast and hassle-free.
 
 ## Installation
 

@@ -299,6 +299,7 @@ const modifications = {
     ["repeat_n_times", 2, 150, "clean_navigation_bar()"], // this is not gonna do anything really, but put it here for consistency
     ["styles2", ".left-entry > :nth-child(2),.left-entry > :nth-child(3),.left-entry > :nth-child(4),.left-entry > :nth-child(5),.left-entry > :nth-child(6),.left-entry > :nth-child(7),.left-entry > :nth-child(8),"], // this style2 is to immediately hide the fixed parts of the leftnavi to eliminate the flash effect
     ["styles2", ".nav-link-ul.mini > :nth-child(2),.nav-link-ul.mini > :nth-child(3),.nav-link-ul.mini > :nth-child(4),.nav-link-ul.mini > :nth-child(5),.nav-link-ul.mini > :nth-child(6),.nav-link-ul.mini > :nth-child(7),.nav-link-ul.mini > :nth-child(8),"],
+    ["styles2", "#left-part > div > div > div.flex-block > div,#left-part > div > div > div.showmore-link.p-relative.f-left,"], // streaming page
     ["hideDropdownOnHover"]],
   searchrecom: [
     ["styles", ".trending,.bili-dyn-topic-box,.topic-panel,.channel-menu-mini,.bili-dyn-live-users,"], // .bili-dyn-live-users是动态页的正在直播, 暂且在此去除
@@ -596,5 +597,55 @@ chrome.storage.local.get(Object.keys(settings), function(result) {
   });
   hideElements(true);
 });
+
+// following code is to implement the "/" shortcut to focus search bar
+let enableSlashFocus = true;
+chrome.storage.local.get(['slashfocus'], function (result) {
+  if (result.slashfocus !== undefined) {
+    enableSlashFocus = !!result.slashfocus;
+  }
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && Object.prototype.hasOwnProperty.call(changes, 'slashfocus')) {
+    enableSlashFocus = !!changes.slashfocus.newValue;
+  }
+});
+
+function focusBiliSearch() {
+  // the elements below are found in 1. search results page 2. right navi pages 3. streaming page 4. game center 5. game search page 6. shopping page 7. manga main page 8. manga detail pages 9. shopping item detail page n. main page & left navi pages & user home page & anime page
+  // there is a keyword conflict in game streaming page, ignoring the issue for now
+  let input = document.querySelector("input.search-input-el") || document.querySelector("div.topbar > div.right > div.search-input > input[type=text]") || document.querySelector("input.nav-search-content") || document.querySelector("#biliGameHeader > header > div.nav-search > input[type=text]") || document.querySelector("div.bili-game-header-nav-search > input[type=text]") || document.querySelector("#app > div.nav-header-wrapper > div > div.nav-header-search-bar-wrapper > input") || document.querySelector("input#keyword-search") || document.querySelector("input.search-input") || document.querySelector("input.nav-header-search-bar") || document.querySelector("input.nav-search-input");
+  if (!input) return false;
+
+  // Smoothly scroll the search box into the center of the viewport
+  input.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  // focus + select like YouTube
+  input.focus({ preventScroll: true });
+  input.select(); // select existing text
+  return true;
+}
+
+document.addEventListener(
+  "keydown",
+  (e) => {
+    if (!enableSlashFocus) return;
+    // only plain "/" (ignore Ctrl/Cmd/Alt combos)
+    if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+
+    // don’t hijack when the user is already typing somewhere
+    const t = e.target;
+    const typing =
+      t instanceof HTMLInputElement ||
+      t instanceof HTMLTextAreaElement ||
+      t?.isContentEditable;
+    if (typing) return;
+
+    e.preventDefault();
+    focusBiliSearch();
+  },
+  true
+);
 
 console.log("BiliFocus: Extension Loaded.");

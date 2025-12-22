@@ -33,6 +33,10 @@ const languageContent = {
     columns: '专栏',
     recentlikes: '最近点赞的视频',
     usrpageleftsidebar: '左侧边栏',
+    settingsMainTitle: '设置',
+    settingsTitle: '语言',
+    behaviorTitle: '其他',
+    slashfocus: '使用「/」键聚焦搜索栏',
     selectAll: '全部选择',
     unselectAll: '全部取消',
     feedback: '意见反馈',
@@ -64,6 +68,10 @@ const languageContent = {
     columns: 'Columns',
     recentlikes: 'Recent Likes',
     usrpageleftsidebar: 'Left Sidebar',
+    settingsMainTitle: 'Settings',
+    settingsTitle: 'Language',
+    behaviorTitle: 'Other',
+    slashfocus: 'Use "/" key to focus search bar',
     selectAll: 'Select All',
     unselectAll: 'Unselect All',
     feedback: 'Feedback',
@@ -95,6 +103,10 @@ const languageContent = {
     columns: 'コラム',
     recentlikes: '最近いいねした動画',
     usrpageleftsidebar: '左サイドバー',
+    settingsMainTitle: '設定',
+    settingsTitle: '言語',
+    behaviorTitle: 'その他',
+    slashfocus: '「/」キーで検索バーにフォーカス',
     selectAll: 'すべて選択',
     unselectAll: 'すべて解除',
     feedback: 'フィードバック',
@@ -110,7 +122,10 @@ function applyLanguage(lang) {
   const content = languageContent[lang];
   
   // Update all text elements
-  document.getElementById('language-btn').textContent = content.languageBtn;
+  const languageBtn = document.getElementById('language-btn');
+  if (languageBtn) {
+    languageBtn.textContent = content.languageBtn;
+  }
   document.getElementById('main-title').textContent = content.mainTitle;
   document.getElementById('homepagerecom-text').textContent = content.homepagerecom;
   document.getElementById('vidrecom-text').textContent = content.vidrecom;
@@ -137,6 +152,19 @@ function applyLanguage(lang) {
   document.getElementById('usrpageleftsidebar-text').textContent = content.usrpageleftsidebar;
   document.getElementById('feedback-text').textContent = content.feedback;
   document.getElementById('modal-text').textContent = content.modalText;
+  const settingsMainTitle = document.getElementById('settings-main-title');
+  if (settingsMainTitle) {
+    settingsMainTitle.textContent = content.settingsMainTitle;
+  }
+  document.getElementById('language-title').textContent = content.settingsTitle;
+  const slashText = document.getElementById('slashfocus-text');
+  if (slashText) {
+    slashText.textContent = content.slashfocus;
+  }
+  const behaviorTitle = document.getElementById('behavior-title');
+  if (behaviorTitle && content.behaviorTitle) {
+    behaviorTitle.textContent = content.behaviorTitle;
+  }
   
   // Update button text
   updateButtonText();
@@ -157,17 +185,62 @@ function updateButtonText() {
 
 function setupLanguageSwitching() {
   // Load saved language preference or default to Mandarin
-  chrome.storage.local.get(['language'], function(result) {
+  chrome.storage.local.get(['language', 'slashfocus'], function(result) {
     const savedLanguage = result.language || 'zh';
     applyLanguage(savedLanguage);
+
+    const slashToggle = document.getElementById('slashfocus-toggle');
+    if (slashToggle) {
+      const enabled = result.slashfocus !== undefined ? !!result.slashfocus : true;
+      slashToggle.checked = enabled;
+    }
   });
   
-  // Add click listener for language button
-  document.getElementById('language-btn').addEventListener('click', function() {
-    const languages = ['zh', 'en', 'ja'];
-    const currentIndex = languages.indexOf(currentLanguage);
-    const nextIndex = (currentIndex + 1) % languages.length;
-    applyLanguage(languages[nextIndex]);
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const settingsCloseBtn = document.getElementById('settings-close-btn');
+  const languageRadios = document.querySelectorAll('input[name="language"]');
+  const slashToggle = document.getElementById('slashfocus-toggle');
+
+  if (!settingsBtn || !settingsOverlay || !settingsCloseBtn || !languageRadios.length || !slashToggle) {
+    return;
+  }
+
+  function openSettings() {
+    // Pre-select current language
+    const currentRadio = document.querySelector(`input[name="language"][value="${currentLanguage}"]`);
+    if (currentRadio) {
+      currentRadio.checked = true;
+    }
+    settingsOverlay.style.display = 'flex';
+  }
+
+  settingsBtn.addEventListener('click', openSettings);
+
+  settingsCloseBtn.addEventListener('click', () => {
+    settingsOverlay.style.display = 'none';
+  });
+
+  // Change language immediately when selecting an option
+  languageRadios.forEach((radio) => {
+    radio.addEventListener('change', () => {
+      const value = radio.value;
+      if (value && languageContent[value]) {
+        applyLanguage(value);
+      }
+    });
+  });
+
+  // Toggle "/" shortcut behavior
+  slashToggle.addEventListener('change', () => {
+    chrome.storage.local.set({ slashfocus: slashToggle.checked });
+  });
+
+  // Close settings when clicking outside the modal content
+  settingsOverlay.addEventListener('click', (e) => {
+    if (e.target === settingsOverlay) {
+      settingsOverlay.style.display = 'none';
+    }
   });
 }
 
@@ -335,11 +408,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Feedback interaction
-document.getElementById("feedback-link").addEventListener("click", (e) => {
-  e.preventDefault();
-  document.getElementById("custom-alert").style.display = "flex";
-});
+const feedbackOverlay = document.getElementById("custom-alert");
+const feedbackLink = document.getElementById("feedback-link");
+const feedbackCloseBtn = document.getElementById("modal-close-btn");
 
-document.getElementById("modal-close-btn").addEventListener("click", () => {
-  document.getElementById("custom-alert").style.display = "none";
-});
+if (feedbackLink && feedbackOverlay) {
+  feedbackLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    feedbackOverlay.style.display = "flex";
+  });
+}
+
+if (feedbackCloseBtn && feedbackOverlay) {
+  feedbackCloseBtn.addEventListener("click", () => {
+    feedbackOverlay.style.display = "none";
+  });
+
+  // Close feedback modal when clicking outside the content
+  feedbackOverlay.addEventListener("click", (e) => {
+    if (e.target === feedbackOverlay) {
+      feedbackOverlay.style.display = "none";
+    }
+  });
+}

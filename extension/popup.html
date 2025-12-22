@@ -245,13 +245,19 @@
         background: var(--modal-bg);
         padding: 25px;
         border-radius: 8px;
-        max-width: 280px;
+        max-width: 310px;
+        box-sizing: border-box;
         text-align: center;
         font-size: 14px;
         color: var(--modal-text);
         box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         user-select: text;
         border: none;
+      }
+
+      #settings-overlay .modal-content {
+        width: 310px;
+        min-height: 200px;
       }
 
       #modal-close-btn {
@@ -278,26 +284,105 @@
         box-shadow: 0 1px 2px rgba(0,123,255,0.3), inset 0 1px 2px rgba(0,0,0,0.2);
       }
 
-      #language-btn {
+      #settings-btn {
         background: linear-gradient(145deg, var(--btn-bg), #0056b3);
         color: white;
         border: none;
-        border-radius: 6px;
-        padding: 6px 10px;
-        font-size: 12px;
-        font-weight: bold;
+        border-radius: 999px;
+        padding: 6px;
+        margin-top: 6px;
         cursor: pointer;
         transition: all 0.2s ease;
-        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         box-shadow: 0 2px 4px rgba(0,123,255,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
       }
 
-      #language-btn:hover {
+      #settings-btn:hover {
         transform: translateY(-1px);
         box-shadow: 0 3px 6px rgba(0,123,255,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
       }
 
-      #language-btn:active {
+      #settings-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0,123,255,0.3), inset 0 1px 2px rgba(0,0,0,0.2);
+      }
+
+      #settings-icon {
+        width: 18px;
+        height: 18px;
+        display: block;
+        filter: invert(1);
+      }
+
+      #settings-main-title {
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 14px;
+        margin-top: -10px;
+        text-align: center;
+      }
+
+      .settings-divider {
+        border-top: 1px solid var(--border-color);
+        margin-top: 12px;
+        margin-bottom: -2px;
+      }
+
+      #language-title {
+        font-weight: bold;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+
+      #language-options {
+        text-align: left;
+        margin-top: 8px;
+      }
+
+      #language-options label {
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      #behavior-title {
+        font-weight: bold;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+
+      #behavior-options {
+        text-align: left;
+        margin-top: 8px;
+      }
+
+      #behavior-options label {
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      #settings-close-btn {
+        margin-top: 15px;
+        background: linear-gradient(145deg, var(--btn-bg), #0056b3);
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
+        width: 100%;
+      }
+
+      #settings-close-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0,123,255,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+      }
+
+      #settings-close-btn:active {
         transform: translateY(0);
         box-shadow: 0 1px 2px rgba(0,123,255,0.3), inset 0 1px 2px rgba(0,0,0,0.2);
       }
@@ -311,9 +396,42 @@
     </div>
   </div>
   <body data-theme="light">
+    <div id="settings-overlay" class="modal-overlay">
+      <div class="modal-content">
+        <p id="settings-main-title">设置</p>
+        <div class="settings-divider"></div>
+        <p id="language-title">语言</p>
+        <div id="language-options">
+          <label>
+            <input type="radio" name="language" value="zh">
+            简体中文
+          </label>
+          <label>
+            <input type="radio" name="language" value="en">
+            English
+          </label>
+          <label>
+            <input type="radio" name="language" value="ja">
+            日本語
+          </label>
+        </div>
+        <div class="settings-divider"></div>
+        <div id="behavior-options">
+          <p id="behavior-title">其他</p>
+          <label>
+            <input type="checkbox" id="slashfocus-toggle">
+            <span id="slashfocus-text">使用「/」键聚焦搜索栏</span>
+          </label>
+        </div>
+        <button id="settings-close-btn">OK</button>
+      </div>
+    </div>
+
     <div style="display: flex; justify-content: space-between; align-items: center; margin: -5px 0 8px 0;">
       <strong class="title" id="main-title">选择要隐藏的东西</strong>
-      <button id="language-btn">中</button>
+      <button id="settings-btn" title="Settings">
+        <img src="icons/settings.svg" alt="Settings" id="settings-icon">
+      </button>
     </div>
 
     <!--
