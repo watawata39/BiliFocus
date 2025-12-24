@@ -621,9 +621,35 @@ function focusBiliSearch() {
   // Smoothly scroll the search box into the center of the viewport
   input.scrollIntoView({ behavior: "smooth", block: "center" });
 
-  // focus + select like YouTube
+  // focus to search box
   input.focus({ preventScroll: true });
-  input.select(); // select existing text
+  // select existing text
+  const selectText = () => {
+    if (input.value && input.value.length > 0) {
+      const wasReadOnly = input.readOnly;
+      const wasDisabled = input.disabled;
+      if (wasReadOnly) input.readOnly = false;
+      if (wasDisabled) input.disabled = false;
+      
+      try {
+        input.select();
+      } catch (e) {
+        if (input.setSelectionRange) {
+          input.setSelectionRange(0, input.value.length);
+        }
+      }
+      if (wasReadOnly) input.readOnly = true;
+      if (wasDisabled) input.disabled = false;
+    }
+  };
+  selectText();
+  requestAnimationFrame(() => {
+    selectText();
+  });
+  setTimeout(() => {
+    selectText();
+  }, 1);
+  
   return true;
 }
 
