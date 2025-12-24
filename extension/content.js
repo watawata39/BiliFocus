@@ -302,7 +302,7 @@ const modifications = {
     ["styles2", "#left-part > div > div > div.flex-block > div,#left-part > div > div > div.showmore-link.p-relative.f-left,"], // streaming page
     ["hideDropdownOnHover"]],
   searchrecom: [
-    ["styles", ".trending,.bili-dyn-topic-box,.topic-panel,.channel-menu-mini,.bili-dyn-live-users,"], // .bili-dyn-live-users是动态页的正在直播, 暂且在此去除
+    ["styles", ".trending,.bili-dyn-topic-box,.topic-panel,.channel-menu-mini,.bili-dyn-search-trendings,"],
     ["repeat_n_times", 3, 200, `modify_element_attributes(".nav-search-input", {placeholder:'',title:''}); modify_element_attributes(".nav-search-keyword", {placeholder:'',title:''});`],], // this is not gonna do anything really, but put it here for consistency
   membership: [
     ["styles2", 'div.vip-wrap,'],
