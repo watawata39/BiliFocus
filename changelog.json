@@ -7,11 +7,12 @@
     ]
   },
   {
-    "date": "2025-12-24",
+    "date": "2025-12-23",
     "version": "1.7.1",
     "changes": [
       "修改搜索推荐屏蔽，在动态页面显示正在直播，彻底隐藏右侧热搜栏"
-    ]
+    ],
+    "_comment": "This is actually made in 2025-12-24, but I don't want repeated dates."
   },
   {
     "date": "2025-12-22",
