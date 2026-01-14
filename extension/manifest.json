@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BiliFocus",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "Use bilibili.com without the bloody distractions that destroys your focus. Also removes ads.",
   "permissions": ["storage"],
   "content_scripts": [

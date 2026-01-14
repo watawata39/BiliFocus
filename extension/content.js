@@ -134,6 +134,7 @@ function remove_by_element(target, remove = true) {
 // only used for searchrecom
 var original_placeholder = '', original_title = '';
 var run_hideelements_after = false; // this flag would be set to true after the first call of hideElements, before the DOM is loaded
+var searchInputsInitialized = false; // Track if search inputs have been initially hidden and restored
 function modify_element_attributes(selector, attributes, root_element = document) {
   let attempts = 0, run_hideelements_flag = false;
   const interval = setInterval(() => {
@@ -159,6 +160,14 @@ function modify_element_attributes(selector, attributes, root_element = document
       if (flag) {
         clearInterval(interval);
         if (run_hideelements_flag) {
+          // Explicitly restore search inputs to ensure they're selectable
+          const searchInputs = document.querySelectorAll(".nav-search-input,.nav-search-keyword");
+          searchInputs.forEach(input => {
+            input.style.visibility = "";
+            input.style.pointerEvents = "";
+          });
+          // Mark as initialized so they won't be hidden again
+          searchInputsInitialized = true;
           hideElements();
         }
       }
@@ -328,26 +337,33 @@ const modifications = {
     ["styles", "#slide_ad,.ad-report,.video-card-ad-small,.adcard-content,.bili-dyn-ads,.head-title,.ad-img,.adcard,div.section.game,"],],
   myvideos: [
     ["styles", "div.section.i-pin-v,div.section.video,"], // for legacy UI
-    ["remove_parent", ['div.top-section', 1, true]],
-    ["remove_parent", ['div.video-section', 1, true]]],
+    // ["remove_parent", ['div.top-section', 1, true]],
+    // ["remove_parent", ['div.video-section', 1, true]],
+    ["styles", "#app > main > div.space-home > div.content > :nth-child(1),#app > main > div.space-home > div.content > :nth-child(2),"],],
   myfavourites: [
     ["styles", "div.section.fav,"], // for legacy UI
-    ["remove_parent", ['div.fav-section', 1, true]]],
+    // ["remove_parent", ['div.fav-section', 1, true]],
+    ["styles", "#app > main > div.space-home > div.content > :nth-child(3),"],],
   subanimes: [
     ["styles", "div.section.bangumi,"], // for legacy UI
-    ["remove_parent", ['div.bangumi-section', 1, true]]],
+    // ["remove_parent", ['div.bangumi-section', 1, true]],
+    ["styles", "#app > main > div.space-home > div.content > :nth-child(4),"],],
   recentcoins: [
     ["styles", "div.col-1 > :nth-child(5),"], // for legacy UI
-    ["remove_parent", ['div.coin-section', 1, true]]],
-  recentlikes: [
-    ["styles", "div.col-1 > :nth-child(8),"], // for legacy UI
-    ["remove_parent", ['div.like-section', 1, true]]],
+    // ["remove_parent", ['div.coin-section', 1, true]],
+    ["styles", "#app > main > div.space-home > div.content > :nth-child(5),"],],
   collections: [
     ["styles", "div.section.channel,"], // for legacy UI
-    ["remove_parent", ['div.list-section', 1, true]]],
+    // ["remove_parent", ['div.list-section', 1, true]],
+    ["styles", "#app > main > div.space-home > div.content > :nth-child(6),"],],
   columns: [
     ["styles", "div.section.article,"], // for legacy UI
-    ["remove_parent", ['div.article-section', 1, true]]],
+    // ["remove_parent", ['div.article-section', 1, true]],
+    ["styles", "#app > main > div.space-home > div.content > :nth-child(7),"],],
+  recentlikes: [
+    ["styles", "div.col-1 > :nth-child(8),"], // for legacy UI
+    // ["remove_parent", ['div.like-section', 1, true]],
+    ["styles", "#app > main > div.space-home > div.content > :nth-child(8),"],],
   usrpageleftsidebar: [ // last 1 is legacy
     ["styles", "div.aside,div.col-2,"]],
 };
@@ -393,15 +409,9 @@ function hideElements(before_dom_load = false) {
       setTimeout(clean_navigation_bar, 150);  // call again to clean any later-added items
     } else
     if (key == "searchrecom") {
-      if (before_dom_load || run_hideelements_after) { // prevent flashing
-        // 2025.9.3
-        // I do not remember why I added this logic
-        // but it is causing bugs, so I am removing it for now
-        // this makes the user unable to select the input in the search bar
-        // 2025.10.3
-        // This does eliminate the flashing problem
-        // It seems that some changes before during a special event caused that bug
-        // But now the webpage is back to normal, so I'm reusing this
+      // Hide search inputs to prevent recommendations from flashing
+      // Only hide if not yet initialized (to prevent re-hiding after restoration)
+      if ((before_dom_load || run_hideelements_after) && !searchInputsInitialized) {
         styles2 += ".nav-search-input,.nav-search-keyword,";
         run_hideelements_after = true;
       }
