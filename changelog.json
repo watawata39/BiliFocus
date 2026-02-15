@@ -1,11 +1,19 @@
 [
   {
     "date": "2026-02-15",
+    "version": "1.7.5",
+    "changes": [
+      "修复了视频播放页面加载时投稿图标闪动问题"
+    ]
+  },
+  {
+    "date": "2026-02-14",
     "version": "1.7.4",
     "changes": [
       "成功修复了隐藏搜索推荐时可能无法选择搜索框的问题",
       "修复了隐藏左上导航栏时出现的闪动问题"
-    ]
+    ],
+    "_comment": "This is actually made in 2026-02-15, but I don't want repeated dates."
   },
   {
     "date": "2026-01-14",

@@ -45,80 +45,6 @@ function hideDropdownOnHover() {
   });
 }
 
-// Store references to removed elements with layers
-const removedElements = new Map();
-
-function remove_parent(selector, layers = 1, display_none = false, root_element = document) {
-  let attempts = 0;
-  const interval = setInterval(() => {
-    let target;
-    try {
-      if (!root_element) throw new Error("Root element is null or undefined.");
-      target = root_element.querySelector(selector);
-    } catch (err) {
-      // console.log(`BiliFocus: Error on querySelector with selector "${selector}":`, err.message);
-      clearInterval(interval);
-      return;
-    }
-    if (target) {
-      let real_target = target;
-      for (let i = 0; i < layers; i++) {
-        real_target = real_target.parentElement;
-      }
-
-      // Store original state for each layer separately
-      if (!removedElements.has(selector)) {
-        removedElements.set(selector, []);
-      }
-
-      removedElements.get(selector).push({
-        element: real_target,
-        layers: layers,
-        visibility: real_target.style.visibility,
-        pointerEvents: real_target.style.pointerEvents,
-        display: real_target.style.display,
-      });
-
-      // Apply hiding
-      real_target.style.visibility = "hidden";
-      real_target.style.pointerEvents = "none";
-      if (display_none) {
-        real_target.style.display = "none";
-      }
-      clearInterval(interval);
-    } else if (++attempts >= 10) {
-      clearInterval(interval);
-    }
-  }, 100);
-}
-
-// Undo removal by restoring element styles based on layers
-function undo_remove_parent(selector, layers = 1) {
-  const entries = removedElements.get(selector);
-  if (entries && entries.length > 0) {
-    // Find the entry that matches the specific layer count
-    const index = entries.findIndex(entry => entry.layers === layers);
-    if (index !== -1) {
-      const entry = entries[index];
-      if (entry.element) {
-        entry.element.style.visibility = entry.visibility || "";
-        entry.element.style.pointerEvents = entry.pointerEvents || "";
-        entry.element.style.display = entry.display || "";
-      }
-      // Remove the restored entry from the array
-      entries.splice(index, 1);
-      // If no more entries for this selector, remove the selector from the map
-      if (entries.length === 0) {
-        removedElements.delete(selector);
-      }
-    } else {
-      // console.log(`BiliFocus: No record found for selector "${selector}" with ${layers} layers to undo.`);
-    }
-  } else {
-    // console.log(`BiliFocus: No record found for selector "${selector}" to undo.`);
-  }
-}
-
 function remove_by_element(target, remove = true) {
   // remove = true -> remove element
   // remove = false -> display element
@@ -302,54 +228,45 @@ const modifications = {
   ],
   membership: [
     ["styles2", 'div.vip-wrap,'],
-    ["remove_parent", ['div.mini-vip', 2, false]],],
+  ],
   messages: [
     ["styles2", '.right-entry > :nth-child(3),'],
-    ["remove_parent", ['div.user-con.signin a[href="//message.bilibili.com"]', 3, false]],],
+  ],
   dongtai: [
     ["styles2", '.right-entry > :nth-child(4),'],
-    ["remove_parent", ['div.user-con.signin a[href="//t.bilibili.com"]', 3, false]],],
+  ],
   favourites: [
     ["styles2", '.right-entry > :nth-child(5),'],
-    ["remove_parent", ['div.mini-favorite', 2, false]],],
+  ],
   history: [
     ["styles2", '.right-entry > :nth-child(6),'],
-    ["remove_parent", ['div.mini-history', 2, false]],],
+  ],
   tougao: [
     ["styles2", '.right-entry > :nth-child(7),'], // 创意中心 icon
-    ["remove_parent", ['div.user-con.signin a[href="//member.bilibili.com/platform/home"]', 1, false]],
-    ["styles2", '.right-entry > :nth-child(8),'], // 投稿 icon
-    ["remove_parent", ['span.mini-upload', 2, false]],],
+    ["styles2", '.right-entry > :nth-child(8),.right-entry .header-upload-entry,'], // 投稿 icon, the second is for the icon that flashes on load in video streaming page
+  ],
   ads: [
     ["styles", "#slide_ad,.ad-report,.video-card-ad-small,.adcard-content,.bili-dyn-ads,.head-title,.ad-img,.adcard,div.section.game,"],],
   myvideos: [
     ["styles", "div.section.i-pin-v,div.section.video,"], // for legacy UI
-    // ["remove_parent", ['div.top-section', 1, true]],
-    // ["remove_parent", ['div.video-section', 1, true]],
     ["styles", "#app > main > div.space-home > div.content > :nth-child(1),#app > main > div.space-home > div.content > :nth-child(2),"],],
   myfavourites: [
     ["styles", "div.section.fav,"], // for legacy UI
-    // ["remove_parent", ['div.fav-section', 1, true]],
     ["styles", "#app > main > div.space-home > div.content > :nth-child(3),"],],
   subanimes: [
     ["styles", "div.section.bangumi,"], // for legacy UI
-    // ["remove_parent", ['div.bangumi-section', 1, true]],
     ["styles", "#app > main > div.space-home > div.content > :nth-child(4),"],],
   recentcoins: [
     ["styles", "div.col-1 > :nth-child(5),"], // for legacy UI
-    // ["remove_parent", ['div.coin-section', 1, true]],
     ["styles", "#app > main > div.space-home > div.content > :nth-child(5),"],],
   collections: [
     ["styles", "div.section.channel,"], // for legacy UI
-    // ["remove_parent", ['div.list-section', 1, true]],
     ["styles", "#app > main > div.space-home > div.content > :nth-child(6),"],],
   columns: [
     ["styles", "div.section.article,"], // for legacy UI
-    // ["remove_parent", ['div.article-section', 1, true]],
     ["styles", "#app > main > div.space-home > div.content > :nth-child(7),"],],
   recentlikes: [
     ["styles", "div.col-1 > :nth-child(8),"], // for legacy UI
-    // ["remove_parent", ['div.like-section', 1, true]],
     ["styles", "#app > main > div.space-home > div.content > :nth-child(8),"],],
   usrpageleftsidebar: [ // last 1 is legacy
     ["styles", "div.aside,div.col-2,"]],
@@ -385,9 +302,6 @@ function hideElements(before_dom_load = false) {
           break;
         case "hideDropdownOnHover":
           hideDropdownOnHover();
-          break;
-        case "remove_parent":
-          remove_parent(instruction[1][0], instruction[1][1], instruction[1][2]);
           break;
       }
     }
@@ -525,9 +439,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       for (const instruction of modifications[request.field]) {
         if (instruction[0] == "hideDropdownOnHover" && window.hideDropdownObserver) {
           window.hideDropdownObserver.disconnect();
-        } else 
-        if (instruction[0] == "remove_parent") {
-          undo_remove_parent(instruction[1][0], instruction[1][1]);
         }
       } 
       if (request.field == "leftnavi") {
@@ -541,9 +452,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           searchrecomObserver.disconnect();
           searchrecomObserver = null;
         }
+        // Page loaded with searchrecom on: we never captured originals, so use 搜索
+        const place = original_placeholder !== '' ? original_placeholder : '搜索';
+        const title = original_title !== '' ? original_title : '';
         document.querySelectorAll(".nav-search-input, .nav-search-keyword").forEach(el => {
-          el.setAttribute("placeholder", original_placeholder);
-          el.setAttribute("title", original_title);
+          el.setAttribute("placeholder", place);
+          if (title !== '') el.setAttribute("title", title);
+          else el.removeAttribute("title");
         });
       } else 
       if (request.field == "ads") {
@@ -560,24 +475,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     hideElementsTimeout = setTimeout(() => {
       isProcessingUpdates = true;
       hideElements();
-      
-      // If all settings are now false, ensure all elements are properly restored
-      const allSettingsFalse = Object.values(settings).every(value => value === false);
-      if (allSettingsFalse) {
-        // Force restore all personal homepage items
-        if (window.location.href.includes("space.bilibili.com/"+getCookieValue("DedeUserID"))) {
-          personal_page_prefrences.forEach(key => {
-            if (modifications[key]) {
-              for (const instruction of modifications[key]) {
-                if (instruction[0] === "remove_parent") {
-                  undo_remove_parent(instruction[1][0], instruction[1][1]);
-                }
-              }
-            }
-          });
-        }
-      }
-      
+
       isProcessingUpdates = false;
       hideElementsTimeout = null;
     }, 100); // 100ms delay to catch bulk updates
