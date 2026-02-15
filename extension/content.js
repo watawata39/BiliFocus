@@ -131,50 +131,37 @@ function remove_by_element(target, remove = true) {
   }
 }
 
-// only used for searchrecom
+// searchrecom: store original placeholder/title for restore when option is turned off
 var original_placeholder = '', original_title = '';
-var run_hideelements_after = false; // this flag would be set to true after the first call of hideElements, before the DOM is loaded
-var searchInputsInitialized = false; // Track if search inputs have been initially hidden and restored
-function modify_element_attributes(selector, attributes, root_element = document) {
-  let attempts = 0, run_hideelements_flag = false;
-  const interval = setInterval(() => {
-    let target;
-    try {
-      target = root_element.querySelector(selector);
-    } catch (err) {
-      // console.log(`BiliFocus: error on querySelector "${selector}", root_element ${root_element}`);
+var searchrecomObserver = null; // one-shot observer to clear search inputs when they appear
+function clearSearchInputSuggestions() {
+  function clearInputs() {
+    const inputs = document.querySelectorAll(".nav-search-input, .nav-search-keyword");
+    if (inputs.length === 0) return false;
+    const first = inputs[0];
+    if (original_placeholder === '' && original_title === '') {
+      original_placeholder = first.getAttribute("placeholder") || '';
+      original_title = first.getAttribute("title") || '';
     }
-    if (target) {
-      let flag = true;
-      Object.keys(attributes).forEach(attr => {
-        if (original_title == '') {
-          original_placeholder = target.getAttribute("placeholder");
-          original_title = target.getAttribute("title");
-          if (original_title == '') flag = false;
-        }
-        if (flag && run_hideelements_after && attributes[attr] == '') {
-          run_hideelements_after = false; run_hideelements_flag = true;
-        }
-        target.setAttribute(attr, attributes[attr]);
-      });
-      if (flag) {
-        clearInterval(interval);
-        if (run_hideelements_flag) {
-          // Explicitly restore search inputs to ensure they're selectable
-          const searchInputs = document.querySelectorAll(".nav-search-input,.nav-search-keyword");
-          searchInputs.forEach(input => {
-            input.style.visibility = "";
-            input.style.pointerEvents = "";
-          });
-          // Mark as initialized so they won't be hidden again
-          searchInputsInitialized = true;
-          hideElements();
-        }
-      }
-    } else if (++attempts >= 10) {
-      clearInterval(interval);
+    inputs.forEach(el => {
+      el.setAttribute("placeholder", "");
+      el.setAttribute("title", "");
+    });
+    return true;
+  }
+  if (!document.body) return;
+  if (clearInputs()) return;
+  if (searchrecomObserver) {
+    searchrecomObserver.disconnect();
+    searchrecomObserver = null;
+  }
+  searchrecomObserver = new MutationObserver(() => {
+    if (clearInputs()) {
+      searchrecomObserver.disconnect();
+      searchrecomObserver = null;
     }
-  }, 100);
+  });
+  searchrecomObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 rafmr_lastRunTime = 0;
@@ -305,14 +292,14 @@ const modifications = {
   comments: [
     ["styles", `#commentapp,iframe[name="DMdl"],#comment-module,.bili-dyn-item__footer > :nth-child(2),`],],
   leftnavi: [
-    ["repeat_n_times", 2, 150, "clean_navigation_bar()"], // this is not gonna do anything really, but put it here for consistency
-    ["styles2", ".left-entry > :nth-child(2),.left-entry > :nth-child(3),.left-entry > :nth-child(4),.left-entry > :nth-child(5),.left-entry > :nth-child(6),.left-entry > :nth-child(7),.left-entry > :nth-child(8),"], // this style2 is to immediately hide the fixed parts of the leftnavi to eliminate the flash effect
-    ["styles2", ".nav-link-ul.mini > :nth-child(2),.nav-link-ul.mini > :nth-child(3),.nav-link-ul.mini > :nth-child(4),.nav-link-ul.mini > :nth-child(5),.nav-link-ul.mini > :nth-child(6),.nav-link-ul.mini > :nth-child(7),.nav-link-ul.mini > :nth-child(8),"],
+    ["repeat_n_times", 2, 150, "clean_navigation_bar()"], // this is not gonna do anything really, but put it here for consistency. It should be unnecessary after 1.7.4 as the following 2 lines has excess selectors that should cover all cases. It is kept here because, well, it's just a backup.
+    ["styles2", ".left-entry > :nth-child(2),.left-entry > :nth-child(3),.left-entry > :nth-child(4),.left-entry > :nth-child(5),.left-entry > :nth-child(6),.left-entry > :nth-child(7),.left-entry > :nth-child(8),.left-entry > :nth-child(9),.left-entry > :nth-child(10),.left-entry > :nth-child(11),.left-entry > :nth-child(12),"], // this style2 is to immediately hide the fixed parts of the leftnavi to eliminate the flash effect
+    ["styles2", ".nav-link-ul.mini > :nth-child(2),.nav-link-ul.mini > :nth-child(3),.nav-link-ul.mini > :nth-child(4),.nav-link-ul.mini > :nth-child(5),.nav-link-ul.mini > :nth-child(6),.nav-link-ul.mini > :nth-child(7),.nav-link-ul.mini > :nth-child(8),.nav-link-ul.mini > :nth-child(9),.nav-link-ul.mini > :nth-child(10),.nav-link-ul.mini > :nth-child(11),.nav-link-ul.mini > :nth-child(12),"],
     ["styles2", "#left-part > div > div > div.flex-block > div,#left-part > div > div > div.showmore-link.p-relative.f-left,"], // streaming page
     ["hideDropdownOnHover"]],
   searchrecom: [
     ["styles", ".trending,.bili-dyn-topic-box,.topic-panel,.channel-menu-mini,.bili-dyn-search-trendings,"],
-    ["repeat_n_times", 3, 200, `modify_element_attributes(".nav-search-input", {placeholder:'',title:''}); modify_element_attributes(".nav-search-keyword", {placeholder:'',title:''});`],], // this is not gonna do anything really, but put it here for consistency
+  ],
   membership: [
     ["styles2", 'div.vip-wrap,'],
     ["remove_parent", ['div.mini-vip', 2, false]],],
@@ -409,16 +396,16 @@ function hideElements(before_dom_load = false) {
       setTimeout(clean_navigation_bar, 150);  // call again to clean any later-added items
     } else
     if (key == "searchrecom") {
-      // Hide search inputs to prevent recommendations from flashing
-      // Only hide if not yet initialized (to prevent re-hiding after restoration)
-      if ((before_dom_load || run_hideelements_after) && !searchInputsInitialized) {
-        styles2 += ".nav-search-input,.nav-search-keyword,";
-        run_hideelements_after = true;
-      }
-      modify_element_attributes(".nav-search-input", {placeholder:'',title:''});
-      modify_element_attributes(".nav-search-keyword", {placeholder:'',title:''});
+      clearSearchInputSuggestions();
     }
   });
+
+  // Hide search box placeholder text via CSS to prevent flash before JS clears attributes
+  if (settings.searchrecom) {
+    addGlobalStyle(".nav-search-input::placeholder, .nav-search-keyword::placeholder { color: transparent !important; opacity: 0 !important; }", "bili-focus-style-searchrecom");
+  } else {
+    addGlobalStyle("", "bili-focus-style-searchrecom");
+  }
 
   if (styles !== "") {
     addGlobalStyle(`${styles.substring(0, styles.length - 1)}
@@ -550,10 +537,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         remove_ads_from_mainpagerecom();
       } else
       if (request.field == "searchrecom") {
-        modify_element_attributes(".nav-search-input", {
-          placeholder:original_placeholder,title:original_title});
-        modify_element_attributes(".nav-search-keyword", {
-          placeholder:original_placeholder,title:original_title});
+        if (searchrecomObserver) {
+          searchrecomObserver.disconnect();
+          searchrecomObserver = null;
+        }
+        document.querySelectorAll(".nav-search-input, .nav-search-keyword").forEach(el => {
+          el.setAttribute("placeholder", original_placeholder);
+          el.setAttribute("title", original_title);
+        });
       } else 
       if (request.field == "ads") {
         remove_ads_from_mainpagerecom(false);
