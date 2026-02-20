@@ -70,7 +70,6 @@ function remove_ads_from_mainpagerecom(remove = true) {
   const currentTime = Date.now();
   if (currentTime - rafmr_lastRunTime < RAFMR_MINDELAY) return;
   rafmr_lastRunTime = currentTime;
-  // console.log("BiliFocus: Removing ads from homepage recommendations...");
   if (!settings.homepagerecom || window.location.href.includes("search.bilibili.com")) {
     const ad_icons = document.querySelectorAll(".bili-video-card__info--ad"); // the old version, but still needed for the ads on search.bilibili.com
     ad_icons.forEach((element) => {
@@ -111,24 +110,19 @@ function getCookieValue(cookieName) {
 
 function addVidrecomObserver(run = false) {
   const callback = () => {
-    // console.log("BiliFocus: reacting to post-video recommendations.");
     const recom_container = document.querySelector(".bpx-player-ending-related");
     if (!recom_container) return;  // if the recoms' container not present, quit
     const cancel_btn = document.querySelector(".bpx-player-ending-related-item-cancel");
     const countdown = document.querySelector(".bpx-player-ending-related-item-countdown");
     if (cancel_btn && countdown) {
       // 自动连播 is on, show the 取消连播 option
-      // console.log("BiliFocus: auto play is on, making modifications...");
       cancel_btn.style.visibility = 'visible';cancel_btn.style.pointerEvents = 'auto';
       countdown.style.visibility = 'visible';countdown.style.pointerEvents = 'auto';
-    } else {
-      // console.log("BiliFocus: auto play not detected.");
     }
   };
   const targetNode = document.querySelector(".bpx-player-ending-panel");
   if (!targetNode) return;
   window.vidrecom_observer = new MutationObserver(callback);
-  // console.log("BiliFocus: adding post video observer.");
   window.vidrecom_observer.observe(targetNode, { childList: true, subtree: true });
   if (run) {callback();}
 }
@@ -322,7 +316,6 @@ let is_first_personal_page_check = true;
 let lastHideElementsTime = 0; // limit the number of calls of hideElements
 const HIDE_ELEMENTS_MIN_DELAY = 50;
 function initialLogicBody() {
-  // console.log("BiliFocus: Running initializing logic...");
   chrome.storage.local.get(Object.keys(settings), function(result) {
     Object.keys(settings).forEach(key => {
       settings[key] = result[key] !== undefined ? result[key] : settings[key];
@@ -345,7 +338,6 @@ function initialLogicBody() {
       const mutation_targets = ["left-entry", "bili-header", "bili-header__bar", "mini-header", "right-entry", "vip-wrap", "vip-popover-wrap", "nav-link", "nav-link-ul"];
       mutations.forEach((mutation) => {
         if (is_first_personal_page_check && mutation.target.classList.contains("section-title")) {
-          // console.log("BiliFocus: is first personal page check, running logic without interval check. ");
           is_first_personal_page_check = false;
           runMainCode(false);
           return;
@@ -353,7 +345,6 @@ function initialLogicBody() {
         const targetClasses = Array.from(mutation.target.classList);
         if ((targetClasses.some(className => mutation_targets.includes(className)))
           ) {
-          // console.log("BiliFocus: target mutation detected, running logic...");
           runMainCode();
         }
         if (mutation.target.classList.contains("bili-video-card__image--wrap")) {
@@ -375,7 +366,6 @@ function initialLogicBody() {
       if (isProcessingUpdates) {
         return;
       }
-      // console.log("BiliFocus: popstate detected. Running logic...");
       runMainCode();
     });
 
@@ -542,8 +532,6 @@ document.addEventListener(
 
 // observer to hide dropdown menu from 首页 button at leftnavi if settings.leftnavi is true
 (() => {
-  console.log("hi.");
-
   let liObserver = null;       // observer for the first li (hides dropdown)
   let managerObserver = null;  // temporary observer that detects rerenders
   let currentLi = null;        // the li currently observing
@@ -569,7 +557,6 @@ document.addEventListener(
     if (li === currentLi) return;
 
     if (liObserver) {
-      console.log("disconnect old li observer.");
       liObserver.disconnect();
       liObserver = null;
     }
@@ -580,14 +567,10 @@ document.addEventListener(
     hideIfPresent(li);
 
     liObserver = new MutationObserver(() => hideIfPresent(li));
-    console.log("li observer created.");
     liObserver.observe(li, { childList: true });
-    console.log("start observing first li.");
   }
 
   function tryAttach() {
-    console.log("tryAttach called.");
-
     // Gate: this is the 首页 button for the dropdown menu. Checking for it. 
     if (!document.querySelector("div.mini-header__title")) return false;
 
@@ -601,14 +584,11 @@ document.addEventListener(
   function startManagerObserver() {
     if (managerObserver) return;
 
-    console.log("manager observer started (10s window).");
-
     managerObserver = new MutationObserver(() => {
       const li = findFirstLi();
       if (!li) return;
 
       if (currentLi !== li) {
-        console.log("detected left-entry rerender; reattaching.");
         attachToLi(li);
       }
     });
@@ -621,7 +601,6 @@ document.addEventListener(
     // stop checking after 10 seconds
     setTimeout(() => {
       if (managerObserver) {
-        console.log("manager observer timeout → disconnect.");
         managerObserver.disconnect();
         managerObserver = null;
       }
@@ -629,12 +608,8 @@ document.addEventListener(
   }
 
   function bootstrap() {
-    const ok = tryAttach();
+    tryAttach();
     startManagerObserver();
-
-    if (!ok) {
-      console.log("not ready yet; manager will catch it within 10s.");
-    }
   }
 
   if (document.readyState === "loading") {
