@@ -19,32 +19,6 @@ function removeGlobalStyle(id = "bili-focus-style") {
   }
 }
 
-function hideDropdownOnHover() {
-  if (!document.body) return; // DOM not ready
-
-  if (!window.hideDropdownObserver) {
-    window.hideDropdownObserver = new MutationObserver((mutations) => {
-      for (const m of mutations) {
-        for (const node of m.addedNodes) {
-          if (
-            node.nodeType === Node.ELEMENT_NODE &&
-            node.classList.contains("is-bottom-start")
-          ) {
-            node.style.visibility = "hidden";
-            node.style.pointerEvents = "none";
-            node.style.display = "none";
-          }
-        }
-      }
-    });
-  }
-
-  window.hideDropdownObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
-}
-
 function remove_by_element(target, remove = true) {
   // remove = true -> remove element
   // remove = false -> display element
@@ -221,8 +195,9 @@ const modifications = {
     ["repeat_n_times", 2, 150, "clean_navigation_bar()"], // this is not gonna do anything really, but put it here for consistency. It should be unnecessary after 1.7.4 as the following 2 lines has excess selectors that should cover all cases. It is kept here because, well, it's just a backup.
     ["styles2", ".left-entry > :nth-child(2),.left-entry > :nth-child(3),.left-entry > :nth-child(4),.left-entry > :nth-child(5),.left-entry > :nth-child(6),.left-entry > :nth-child(7),.left-entry > :nth-child(8),.left-entry > :nth-child(9),.left-entry > :nth-child(10),.left-entry > :nth-child(11),.left-entry > :nth-child(12),"], // this style2 is to immediately hide the fixed parts of the leftnavi to eliminate the flash effect
     ["styles2", ".nav-link-ul.mini > :nth-child(2),.nav-link-ul.mini > :nth-child(3),.nav-link-ul.mini > :nth-child(4),.nav-link-ul.mini > :nth-child(5),.nav-link-ul.mini > :nth-child(6),.nav-link-ul.mini > :nth-child(7),.nav-link-ul.mini > :nth-child(8),.nav-link-ul.mini > :nth-child(9),.nav-link-ul.mini > :nth-child(10),.nav-link-ul.mini > :nth-child(11),.nav-link-ul.mini > :nth-child(12),"],
+    ["styles2", "#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(2),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(3),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(4),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(5),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(6),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(7),"], // elements that flash by when bilibili.com/bangumi/play is loaded
     ["styles2", "#left-part > div > div > div.flex-block > div,#left-part > div > div > div.showmore-link.p-relative.f-left,"], // streaming page
-    ["hideDropdownOnHover"]],
+    ["hideDropdownOnHover"]], // keep here for consistency, does nothing at all. Feature implemented by observer. Search for 'hideIfPresent'
   searchrecom: [
     ["styles", ".trending,.bili-dyn-topic-box,.topic-panel,.channel-menu-mini,.bili-dyn-search-trendings,"],
   ],
@@ -299,9 +274,6 @@ function hideElements(before_dom_load = false) {
           break;
         case "styles2":
           styles2 += instruction[1];
-          break;
-        case "hideDropdownOnHover":
-          hideDropdownOnHover();
           break;
       }
     }
@@ -436,11 +408,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         remove_ads_from_mainpagerecom();
       }
     } else {                         // if the user turned the option off
-      for (const instruction of modifications[request.field]) {
-        if (instruction[0] == "hideDropdownOnHover" && window.hideDropdownObserver) {
-          window.hideDropdownObserver.disconnect();
-        }
-      } 
       if (request.field == "leftnavi") {
         clean_navigation_bar(false);
       } else 
@@ -572,5 +539,109 @@ document.addEventListener(
   },
   true
 );
+
+// observer to hide dropdown menu from 首页 button at leftnavi if settings.leftnavi is true
+(() => {
+  console.log("hi.");
+
+  let liObserver = null;       // observer for the first li (hides dropdown)
+  let managerObserver = null;  // temporary observer that detects rerenders
+  let currentLi = null;        // the li currently observing
+
+  function hideIfPresent(li) {
+    if (!settings.leftnavi) return; // only hide if settings enabled
+    const target = li.querySelector(":scope > .is-bottom-start");
+    if (!target) return;
+
+    target.style.display = "none";
+    target.style.visibility = "hidden";
+    target.style.pointerEvents = "none";
+  }
+
+  function findFirstLi() {
+    const ul = document.querySelector("ul.left-entry");
+    if (!ul) return null;
+    return ul.firstElementChild || null;
+  }
+
+  function attachToLi(li) {
+    // If we're already attached to this exact node, do nothing
+    if (li === currentLi) return;
+
+    if (liObserver) {
+      console.log("disconnect old li observer.");
+      liObserver.disconnect();
+      liObserver = null;
+    }
+
+    currentLi = li;
+
+    // In case dropdown is already present for whatever reason
+    hideIfPresent(li);
+
+    liObserver = new MutationObserver(() => hideIfPresent(li));
+    console.log("li observer created.");
+    liObserver.observe(li, { childList: true });
+    console.log("start observing first li.");
+  }
+
+  function tryAttach() {
+    console.log("tryAttach called.");
+
+    // Gate: this is the 首页 button for the dropdown menu. Checking for it. 
+    if (!document.querySelector("div.mini-header__title")) return false;
+
+    const li = findFirstLi();
+    if (!li) return false;
+
+    attachToLi(li);
+    return true;
+  }
+
+  function startManagerObserver() {
+    if (managerObserver) return;
+
+    console.log("manager observer started (10s window).");
+
+    managerObserver = new MutationObserver(() => {
+      const li = findFirstLi();
+      if (!li) return;
+
+      if (currentLi !== li) {
+        console.log("detected left-entry rerender; reattaching.");
+        attachToLi(li);
+      }
+    });
+
+    managerObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+
+    // stop checking after 10 seconds
+    setTimeout(() => {
+      if (managerObserver) {
+        console.log("manager observer timeout → disconnect.");
+        managerObserver.disconnect();
+        managerObserver = null;
+      }
+    }, 10000);
+  }
+
+  function bootstrap() {
+    const ok = tryAttach();
+    startManagerObserver();
+
+    if (!ok) {
+      console.log("not ready yet; manager will catch it within 10s.");
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
+  } else {
+    bootstrap();
+  }
+})();
 
 console.log("BiliFocus: Extension Loaded.");
