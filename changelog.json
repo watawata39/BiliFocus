@@ -1,13 +1,21 @@
 [
   {
     "date": "2026-02-21",
-    "version": "1.7.7",
+    "version": "2.0.0",
     "changes": [
-      "删除了所有的console.log（无论注释与否）"
+      "添加了Microsoft Edge与Firefox的支持（在此之前仅支持Chrome）"
     ]
   },
   {
     "date": "2026-02-20",
+    "version": "1.7.7",
+    "changes": [
+      "删除了所有的console.log（无论注释与否）"
+    ],
+    "_comment": "This is made in 2026-02-21 1am also, but I don't want repeated dates."
+  },
+  {
+    "date": "2026-02-19",
     "version": "1.7.6",
     "changes": [
       "修复了bangumi页面载入时左上导航栏元素闪动",

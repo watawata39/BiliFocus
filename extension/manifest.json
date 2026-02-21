@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "BiliFocus",
-  "version": "1.7.7",
-  "description": "Use bilibili.com without the bloody distractions that destroys your focus. Also removes ads.",
+  "version": "2.0.0",
+  "description": "Use bilibili.com without the bloody distractions that destroys your focus.",
   "permissions": ["storage"],
   "content_scripts": [
     {
@@ -15,8 +15,15 @@
     "default_popup": "popup.html"
   },
   "icons": {
-    "128": "icons/logo128.png",
+    "16": "icons/logo16.png",
+    "32": "icons/logo32.png",
     "48": "icons/logo48.png",
-    "16": "icons/logo16.png"
+    "128": "icons/logo128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "bilifocus@watawata39.github.io",
+      "strict_min_version": "109.0"
+    }
   }
 }
