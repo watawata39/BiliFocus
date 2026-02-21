@@ -1,193 +1,114 @@
 false_count = 0;
 
+// Map stored language preference to _locales folder name
+const langToLocale = { zh: 'zh_CN', en: 'en', ja: 'ja' };
+const supportedLangs = ['zh', 'en', 'ja'];
+
+// Cached messages per locale (from _locales/<locale>/messages.json)
+let messagesCache = {};
+let currentMessages = null;
+let currentLanguage = 'zh';
+
 function adjust_button() {
-  // Adjust button's text using the current language
   updateButtonText();
 }
 
-// Language content mappings
-const languageContent = {
-  zh: {
-    languageBtn: '中',
-    mainTitle: '选择要隐藏的东西',
-    homepagerecom: '首页推荐',
-    vidrecom: '视频推荐',
-    comments: '评论区',
-    groupGeneral: '一般',
-    searchrecom: '搜索推荐',
-    leftnavi: '左上导航栏',
-    ads: '广告',
-    rightNaviGeneral: '右上导航栏',
-    membership: '大会员图标',
-    messages: '消息图标',
-    dongtai: '动态图标',
-    favourites: '收藏图标',
-    history: '历史图标',
-    tougao: '投稿图标',
-    personalPage: '个人主页',
-    myvideos: '我的视频',
-    myfavourites: '收藏夹',
-    subanimes: '订阅番剧',
-    recentcoins: '最近投币的视频',
-    collections: '合集和系列',
-    columns: '专栏',
-    recentlikes: '最近点赞的视频',
-    usrpageleftsidebar: '左侧边栏',
-    settingsMainTitle: '设置',
-    settingsTitle: '语言',
-    behaviorTitle: '其他',
-    slashfocus: '使用「/」键聚焦搜索栏',
-    selectAll: '全部选择',
-    unselectAll: '全部取消',
-    feedback: '意见反馈',
-    modalText: '意见反馈请发邮件至 waterlemon0096@gmail.com。'
-  },
-  en: {
-    languageBtn: 'EN',
-    mainTitle: 'Choose What to Hide',
-    homepagerecom: 'Home Page Recommendations',
-    vidrecom: 'Video Recommendations',
-    comments: 'Video/Post Comments',
-    groupGeneral: 'General',
-    searchrecom: 'Search Recommendations',
-    leftnavi: 'Top-Left Navi',
-    ads: 'All Ads',
-    rightNaviGeneral: 'Top-Right Navi',
-    membership: 'Membership Icon',
-    messages: 'Messages Icon',
-    dongtai: 'Subscription Posts Icon',
-    favourites: 'Favourites Icon',
-    history: 'History Icon',
-    tougao: 'Creativity Center & Post Icon',
-    personalPage: 'Personal Homepage',
-    myvideos: 'My Videos',
-    myfavourites: 'Favourites',
-    subanimes: 'Subscribed Animes',
-    recentcoins: 'Recent Coins',
-    collections: 'Collections',
-    columns: 'Columns',
-    recentlikes: 'Recent Likes',
-    usrpageleftsidebar: 'Left Sidebar',
-    settingsMainTitle: 'Settings',
-    settingsTitle: 'Language',
-    behaviorTitle: 'Other',
-    slashfocus: 'Use "/" key to focus search bar',
-    selectAll: 'Select All',
-    unselectAll: 'Unselect All',
-    feedback: 'Feedback',
-    modalText: 'For feedback, please email waterlemon0096@gmail.com.'
-  },
-  ja: {
-    languageBtn: '日',
-    mainTitle: '非表示にするものを選択',
-    homepagerecom: 'ホームページおすすめ',
-    vidrecom: '動画おすすめ',
-    comments: 'コメント欄',
-    groupGeneral: '一般',
-    searchrecom: '検索おすすめ',
-    leftnavi: '左上ナビゲーション',
-    ads: '広告',
-    rightNaviGeneral: '右上ナビゲーション',
-    membership: 'メンバーシップアイコン',
-    messages: 'メッセージアイコン',
-    dongtai: '投稿アイコン',
-    favourites: 'お気に入りアイコン',
-    history: '履歴アイコン',
-    tougao: '投稿センターアイコン',
-    personalPage: '個人ホームページ',
-    myvideos: '私の動画',
-    myfavourites: 'お気に入り',
-    subanimes: '購読アニメ',
-    recentcoins: '最近投幣した動画',
-    collections: 'コレクションとシリーズ',
-    columns: 'コラム',
-    recentlikes: '最近いいねした動画',
-    usrpageleftsidebar: '左サイドバー',
-    settingsMainTitle: '設定',
-    settingsTitle: '言語',
-    behaviorTitle: 'その他',
-    slashfocus: '「/」キーで検索バーにフォーカス',
-    selectAll: 'すべて選択',
-    unselectAll: 'すべて解除',
-    feedback: 'フィードバック',
-    modalText: 'フィードバックは waterlemon0096@gmail.com までメールをお送りください。'
-  }
-};
+function getMessage(messages, key) {
+  if (!messages || !messages[key]) return '';
+  return messages[key].message || '';
+}
 
-// Language switching functionality
-let currentLanguage = 'zh'; // Default to Mandarin
+async function loadLocale(locale) {
+  if (messagesCache[locale]) return messagesCache[locale];
+  const url = chrome.runtime.getURL(`_locales/${locale}/messages.json`);
+  const res = await fetch(url);
+  const data = await res.json();
+  messagesCache[locale] = data;
+  return data;
+}
 
-function applyLanguage(lang) {
+async function applyLanguage(lang) {
   currentLanguage = lang;
-  const content = languageContent[lang];
-  
-  // Update all text elements
-  const languageBtn = document.getElementById('language-btn');
-  if (languageBtn) {
-    languageBtn.textContent = content.languageBtn;
-  }
-  document.getElementById('main-title').textContent = content.mainTitle;
-  document.getElementById('homepagerecom-text').textContent = content.homepagerecom;
-  document.getElementById('vidrecom-text').textContent = content.vidrecom;
-  document.getElementById('comments-text').textContent = content.comments;
-  document.getElementById('group_general-title').textContent = content.groupGeneral;
-  document.getElementById('searchrecom-text').textContent = content.searchrecom;
-  document.getElementById('leftnavi-text').textContent = content.leftnavi;
-  document.getElementById('ads-text').textContent = content.ads;
-  document.getElementById('right_navi_general-title').textContent = content.rightNaviGeneral;
-  document.getElementById('membership-text').textContent = content.membership;
-  document.getElementById('messages-text').textContent = content.messages;
-  document.getElementById('dongtai-text').textContent = content.dongtai;
-  document.getElementById('favourites-text').textContent = content.favourites;
-  document.getElementById('history-text').textContent = content.history;
-  document.getElementById('tougao-text').textContent = content.tougao;
-  document.getElementById('personal_page-title').textContent = content.personalPage;
-  document.getElementById('myvideos-text').textContent = content.myvideos;
-  document.getElementById('myfavourites-text').textContent = content.myfavourites;
-  document.getElementById('subanimes-text').textContent = content.subanimes;
-  document.getElementById('recentcoins-text').textContent = content.recentcoins;
-  document.getElementById('collections-text').textContent = content.collections;
-  document.getElementById('columns-text').textContent = content.columns;
-  document.getElementById('recentlikes-text').textContent = content.recentlikes;
-  document.getElementById('usrpageleftsidebar-text').textContent = content.usrpageleftsidebar;
-  document.getElementById('feedback-text').textContent = content.feedback;
-  document.getElementById('modal-text').textContent = content.modalText;
+  const locale = langToLocale[lang];
+  const content = await loadLocale(locale);
+  currentMessages = content;
+
+  document.getElementById('main-title').textContent = getMessage(content, 'mainTitle');
+  document.getElementById('homepagerecom-text').textContent = getMessage(content, 'homepagerecom');
+  document.getElementById('vidrecom-text').textContent = getMessage(content, 'vidrecom');
+  document.getElementById('comments-text').textContent = getMessage(content, 'comments');
+  document.getElementById('group_general-title').textContent = getMessage(content, 'groupGeneral');
+  document.getElementById('searchrecom-text').textContent = getMessage(content, 'searchrecom');
+  document.getElementById('leftnavi-text').textContent = getMessage(content, 'leftnavi');
+  document.getElementById('ads-text').textContent = getMessage(content, 'ads');
+  document.getElementById('right_navi_general-title').textContent = getMessage(content, 'rightNaviGeneral');
+  document.getElementById('membership-text').textContent = getMessage(content, 'membership');
+  document.getElementById('messages-text').textContent = getMessage(content, 'messages');
+  document.getElementById('dongtai-text').textContent = getMessage(content, 'dongtai');
+  document.getElementById('favourites-text').textContent = getMessage(content, 'favourites');
+  document.getElementById('history-text').textContent = getMessage(content, 'history');
+  document.getElementById('tougao-text').textContent = getMessage(content, 'tougao');
+  document.getElementById('personal_page-title').textContent = getMessage(content, 'personalPage');
+  document.getElementById('myvideos-text').textContent = getMessage(content, 'myvideos');
+  document.getElementById('myfavourites-text').textContent = getMessage(content, 'myfavourites');
+  document.getElementById('subanimes-text').textContent = getMessage(content, 'subanimes');
+  document.getElementById('recentcoins-text').textContent = getMessage(content, 'recentcoins');
+  document.getElementById('collections-text').textContent = getMessage(content, 'collections');
+  document.getElementById('columns-text').textContent = getMessage(content, 'columns');
+  document.getElementById('recentlikes-text').textContent = getMessage(content, 'recentlikes');
+  document.getElementById('usrpageleftsidebar-text').textContent = getMessage(content, 'usrpageleftsidebar');
+  document.getElementById('feedback-text').textContent = getMessage(content, 'feedback');
+  document.getElementById('modal-text').textContent = getMessage(content, 'modalText');
+
   const settingsMainTitle = document.getElementById('settings-main-title');
-  if (settingsMainTitle) {
-    settingsMainTitle.textContent = content.settingsMainTitle;
-  }
-  document.getElementById('language-title').textContent = content.settingsTitle;
+  if (settingsMainTitle) settingsMainTitle.textContent = getMessage(content, 'settingsMainTitle');
+  document.getElementById('language-title').textContent = getMessage(content, 'settingsTitle');
   const slashText = document.getElementById('slashfocus-text');
-  if (slashText) {
-    slashText.textContent = content.slashfocus;
-  }
+  if (slashText) slashText.textContent = getMessage(content, 'slashfocus');
   const behaviorTitle = document.getElementById('behavior-title');
-  if (behaviorTitle && content.behaviorTitle) {
-    behaviorTitle.textContent = content.behaviorTitle;
-  }
-  
-  // Update button text
+  if (behaviorTitle) behaviorTitle.textContent = getMessage(content, 'behaviorTitle');
+
+  const settingsBtn = document.getElementById('settings-btn');
+  if (settingsBtn) settingsBtn.title = getMessage(content, 'settingsBtnTitle');
+  const bottomBtn = document.getElementById('bottom-btn');
+  if (bottomBtn) bottomBtn.title = getMessage(content, 'bottomBtnTitle');
+
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  if (modalCloseBtn) modalCloseBtn.textContent = getMessage(content, 'modalCloseBtn');
+  const settingsCloseBtn = document.getElementById('settings-close-btn');
+  if (settingsCloseBtn) settingsCloseBtn.textContent = getMessage(content, 'settingsCloseBtn');
+
+  // Update language option labels in settings
+  const langLabels = document.querySelectorAll('#language-options label');
+  const langKeys = ['languageZh', 'languageEn', 'languageJa'];
+  langLabels.forEach((label, i) => {
+    const input = label.querySelector('input[name="language"]');
+    if (input) {
+      const text = getMessage(content, langKeys[i]);
+      label.replaceChildren(input, ' ', document.createTextNode(text));
+    }
+  });
+
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja' : 'en';
   updateButtonText();
-  
-  // Save language preference
   chrome.storage.local.set({ language: lang });
 }
 
 function updateButtonText() {
   const btn = document.getElementById('bottom-btn-text');
-  const content = languageContent[currentLanguage];
-  if (false_count == 0) {
-    btn.textContent = content.unselectAll;
+  const content = currentMessages || messagesCache[langToLocale[currentLanguage]];
+  if (!content) return;
+  if (false_count === 0) {
+    btn.textContent = getMessage(content, 'unselectAll');
   } else {
-    btn.textContent = content.selectAll;
+    btn.textContent = getMessage(content, 'selectAll');
   }
 }
 
 function setupLanguageSwitching() {
-  // Load saved language preference or default to Mandarin
-  chrome.storage.local.get(['language', 'slashfocus'], function(result) {
-    const savedLanguage = result.language || 'zh';
-    applyLanguage(savedLanguage);
+  chrome.storage.local.get(['language', 'slashfocus'], async function(result) {
+    const savedLanguage = supportedLangs.includes(result.language) ? result.language : 'zh';
+    await applyLanguage(savedLanguage);
 
     const slashToggle = document.getElementById('slashfocus-toggle');
     if (slashToggle) {
@@ -195,7 +116,7 @@ function setupLanguageSwitching() {
       slashToggle.checked = enabled;
     }
   });
-  
+
   const settingsBtn = document.getElementById('settings-btn');
   const settingsOverlay = document.getElementById('settings-overlay');
   const settingsCloseBtn = document.getElementById('settings-close-btn');
@@ -207,11 +128,8 @@ function setupLanguageSwitching() {
   }
 
   function openSettings() {
-    // Pre-select current language
     const currentRadio = document.querySelector(`input[name="language"][value="${currentLanguage}"]`);
-    if (currentRadio) {
-      currentRadio.checked = true;
-    }
+    if (currentRadio) currentRadio.checked = true;
     settingsOverlay.style.display = 'flex';
   }
 
@@ -221,11 +139,10 @@ function setupLanguageSwitching() {
     settingsOverlay.style.display = 'none';
   });
 
-  // Change language immediately when selecting an option
   languageRadios.forEach((radio) => {
     radio.addEventListener('change', () => {
       const value = radio.value;
-      if (value && languageContent[value]) {
+      if (value && supportedLangs.includes(value)) {
         applyLanguage(value);
       }
     });

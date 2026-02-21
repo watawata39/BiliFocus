@@ -3,7 +3,9 @@
     "date": "2026-02-21",
     "version": "2.0.0",
     "changes": [
-      "添加了Microsoft Edge与Firefox的支持（在此之前仅支持Chrome）"
+      "添加了Microsoft Edge与Firefox的支持（在此之前仅支持Chrome）",
+      "更新了更现代的语言支持系统", 
+      "从此版本开始开源"
     ]
   },
   {
