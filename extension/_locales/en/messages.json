@@ -40,5 +40,8 @@
   "languageEn": { "message": "English" },
   "languageJa": { "message": "日本語" },
   "modalCloseBtn": { "message": "OK" },
-  "settingsCloseBtn": { "message": "OK" }
+  "settingsCloseBtn": { "message": "OK" },
+  "cleanSearch": { "message": "Clean search" },
+  "cleanSearchLockedTooltip": { "message": "Cannot be changed in clean search mode" },
+  "cleanSearchInfo": { "message": "Clean search mode modifies the main page to look like the simple google search page, removing all distractions." }
 }

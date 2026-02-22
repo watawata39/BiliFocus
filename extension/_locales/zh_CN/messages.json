@@ -40,5 +40,8 @@
   "languageEn": { "message": "English" },
   "languageJa": { "message": "日本語" },
   "modalCloseBtn": { "message": "OK" },
-  "settingsCloseBtn": { "message": "OK" }
+  "settingsCloseBtn": { "message": "OK" },
+  "cleanSearch": { "message": "清爽搜索" },
+  "cleanSearchLockedTooltip": { "message": "清爽搜索模式下无法修改" },
+  "cleanSearchInfo": { "message": "清爽搜索模式将主页面简化为类似 Google 搜索页的简洁样式，去除所有干扰内容。" }
 }

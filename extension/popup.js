@@ -73,10 +73,21 @@ async function applyLanguage(lang) {
   const bottomBtn = document.getElementById('bottom-btn');
   if (bottomBtn) bottomBtn.title = getMessage(content, 'bottomBtnTitle');
 
+  document.getElementById('clean-mode-text').textContent = getMessage(content, 'cleanSearch');
+  const modalTextEl = document.getElementById('clean-search-info-modal-text');
+  if (modalTextEl) modalTextEl.textContent = getMessage(content, 'cleanSearchInfo');
+  const lockedTooltip = getMessage(content, 'cleanSearchLockedTooltip');
+  ['homepagerecom', 'searchrecom'].forEach(key => {
+    const label = document.getElementById(key + '-label');
+    if (label && label.classList.contains('option-locked')) label.title = lockedTooltip;
+  });
+
   const modalCloseBtn = document.getElementById('modal-close-btn');
   if (modalCloseBtn) modalCloseBtn.textContent = getMessage(content, 'modalCloseBtn');
   const settingsCloseBtn = document.getElementById('settings-close-btn');
   if (settingsCloseBtn) settingsCloseBtn.textContent = getMessage(content, 'settingsCloseBtn');
+  const cleanSearchInfoCloseBtn = document.getElementById('clean-search-info-close-btn');
+  if (cleanSearchInfoCloseBtn) cleanSearchInfoCloseBtn.textContent = getMessage(content, 'modalCloseBtn');
 
   // Update language option labels in settings
   const langLabels = document.querySelectorAll('#language-options label');
@@ -103,6 +114,36 @@ function updateButtonText() {
   } else {
     btn.textContent = getMessage(content, 'selectAll');
   }
+}
+
+const CLEAN_MODE_LOCKED_KEYS = ['homepagerecom', 'searchrecom'];
+
+function applyCleanModeLock(locked) {
+  const content = currentMessages || messagesCache[langToLocale[currentLanguage]];
+  const tooltip = content ? getMessage(content, 'cleanSearchLockedTooltip') : '';
+  CLEAN_MODE_LOCKED_KEYS.forEach(key => {
+    const label = document.getElementById(key + '-label');
+    const input = document.getElementById(key);
+    if (!label || !input) return;
+    if (locked) {
+      input.checked = true;
+      input.disabled = true;
+      label.classList.add('option-locked');
+      label.title = tooltip;
+    } else {
+      input.disabled = false;
+      label.classList.remove('option-locked');
+      label.title = '';
+    }
+  });
+}
+
+function updateFalseCountFromCheckboxes(defaults) {
+  if (!defaults) return;
+  false_count = Object.keys(defaults).filter(k => {
+    const el = document.getElementById(k);
+    return el && !el.checked;
+  }).length;
 }
 
 function setupLanguageSwitching() {
@@ -213,8 +254,8 @@ document.addEventListener('DOMContentLoaded', function() {
     usrpageleftsidebar: true,
   };
 
-  // Load stored settings or set defaults if missing
-  chrome.storage.local.get(Object.keys(defaults), function(result) {
+  // Load stored settings or set defaults if missing (include cleanMode)
+  chrome.storage.local.get(Object.keys(defaults).concat(['cleanMode']), function(result) {
     const toSet = {};
     Object.keys(defaults).forEach(key => {
       if (result[key] === undefined) {
@@ -223,8 +264,18 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (!result[key]) false_count++;
       document.getElementById(key).checked = result[key] !== undefined ? result[key] : defaults[key];
     });
+    const cleanModeOn = !!result.cleanMode;
+    if (cleanModeOn) {
+      toSet.homepagerecom = true;
+      toSet.searchrecom = true;
+      document.getElementById('homepagerecom').checked = true;
+      document.getElementById('searchrecom').checked = true;
+      applyCleanModeLock(true);
+      document.getElementById('clean-mode-toggle').checked = true;
+    }
     chrome.storage.local.set(toSet, () => console.log('Initial storage set:', toSet));
-
+    if (cleanModeOn) chrome.storage.local.set({ cleanMode: true });
+    updateFalseCountFromCheckboxes(defaults);
     adjust_button();
   });
 
@@ -254,21 +305,54 @@ document.addEventListener('DOMContentLoaded', function() {
   Object.keys(defaults)
     .forEach(id => {
       document.getElementById(id).addEventListener('change', function() {
+        if (this.disabled) return;
         updateStorage(id, this.checked);
         false_count += this.checked ? -1 : 1;
         adjust_button();
       });
     });
 
-  // Select All / Unselect All button logic
+  // Clean mode toggle: when on, force homepagerecom & searchrecom on and lock them
+  document.getElementById('clean-mode-toggle').addEventListener('change', function() {
+    const on = this.checked;
+    chrome.storage.local.set({ cleanMode: on });
+    // Notify content script (same pattern as updateStorage)
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((tab) => {
+        chrome.tabs.sendMessage(tab.id, {
+          action: 'updateCheckbox',
+          field: 'cleanMode',
+          value: on
+        }, () => {
+          if (chrome.runtime.lastError) {
+            console.log(`Tab ${tab.id} does not have the content script:`, chrome.runtime.lastError.message);
+          }
+        });
+      });
+    });
+    if (on) {
+      updateStorage('homepagerecom', true);
+      updateStorage('searchrecom', true);
+      document.getElementById('homepagerecom').checked = true;
+      document.getElementById('searchrecom').checked = true;
+      applyCleanModeLock(true);
+    } else {
+      applyCleanModeLock(false);
+    }
+    updateFalseCountFromCheckboxes(defaults);
+    adjust_button();
+  });
+
+  // Select All / Unselect All button logic (respect clean mode lock)
   document.getElementById('bottom-btn').addEventListener('click', function() {
     const set_to = false_count === 0 ? false : true;
-    false_count = set_to ? 0 : Object.keys(defaults).length;
+    const cleanModeOn = document.getElementById('clean-mode-toggle').checked;
     Object.keys(defaults).forEach(key => {
-      document.getElementById(key).checked = set_to;
-      updateStorage(key, set_to);
+      const effective = (cleanModeOn && CLEAN_MODE_LOCKED_KEYS.includes(key)) ? true : set_to;
+      document.getElementById(key).checked = effective;
+      updateStorage(key, effective);
     });
-
+    updateFalseCountFromCheckboxes(defaults);
     adjust_button();
   });
 
@@ -345,6 +429,29 @@ if (feedbackCloseBtn && feedbackOverlay) {
   feedbackOverlay.addEventListener("click", (e) => {
     if (e.target === feedbackOverlay) {
       feedbackOverlay.style.display = "none";
+    }
+  });
+}
+
+// Clean search info modal: open on info icon click, close on button or overlay click
+const cleanSearchInfoModal = document.getElementById("clean-search-info-modal");
+const cleanSearchInfoWrap = document.getElementById("clean-search-info-wrap");
+const cleanSearchInfoCloseBtn = document.getElementById("clean-search-info-close-btn");
+
+if (cleanSearchInfoWrap && cleanSearchInfoModal) {
+  cleanSearchInfoWrap.addEventListener("click", (e) => {
+    e.preventDefault();
+    cleanSearchInfoModal.style.display = "flex";
+  });
+}
+
+if (cleanSearchInfoCloseBtn && cleanSearchInfoModal) {
+  cleanSearchInfoCloseBtn.addEventListener("click", () => {
+    cleanSearchInfoModal.style.display = "none";
+  });
+  cleanSearchInfoModal.addEventListener("click", (e) => {
+    if (e.target === cleanSearchInfoModal) {
+      cleanSearchInfoModal.style.display = "none";
     }
   });
 }

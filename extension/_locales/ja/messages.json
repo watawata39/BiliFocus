@@ -40,5 +40,8 @@
   "languageEn": { "message": "English" },
   "languageJa": { "message": "日本語" },
   "modalCloseBtn": { "message": "OK" },
-  "settingsCloseBtn": { "message": "OK" }
+  "settingsCloseBtn": { "message": "OK" },
+  "cleanSearch": { "message": "クリーン検索" },
+  "cleanSearchLockedTooltip": { "message": "クリーン検索モードでは変更できません" },
+  "cleanSearchInfo": { "message": "クリーン検索モードでは、メインページをシンプルな Google 検索ページのように表示し、すべての気を散らす要素を削除します。" }
 }

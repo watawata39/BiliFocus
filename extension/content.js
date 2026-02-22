@@ -177,6 +177,8 @@ const settings = { // these are the defaults, initialise to all true
   usrpageleftsidebar: true,
 };
 const personal_page_prefrences = ["myvideos","myfavourites","subanimes","recentcoins","recentlikes","collections","columns","usrpageleftsidebar"];
+let cleanMode = false; // not in modifications; applied in hideElements() slot
+let cleanModeLogicRanThisSession = false; // run clean-mode logic only once per turn-on; reset when turned off
 const modifications = {
   homepagerecom: [
     ["styles", ".bili-feed4-layout,.bili-header__channel,.header-channel,.palette-button-wrap,.bili-footer,"],],
@@ -241,6 +243,243 @@ const modifications = {
     ["styles", "div.aside,div.col-2,"]],
 };
 
+// ---------- Clean mode (main page reformat): constants and helpers ----------
+/** True only when the page URL is exactly https://bilibili.com or https://www.bilibili.com (with or without trailing slash) */
+function bfCleanIsMainPageExactly() {
+  const okOrigin = window.location.origin === "https://bilibili.com" || window.location.origin === "https://www.bilibili.com";
+  return okOrigin && (window.location.pathname === "" || window.location.pathname === "/");
+}
+const BF_CLEAN_MODE_CLASS = "bf-clean-search";
+const BF_CLEAN_STYLE_ID = "bf-clean-mode-style";
+const BF_FAKE_AVATAR_ID = "bf-fake-avatar";
+const BF_CLEAN_KEY = "__bfCleanMode";
+
+function bfCleanSleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function bfCleanInjectStyle() {
+  let style = document.getElementById(BF_CLEAN_STYLE_ID);
+  if (style) return;
+  style = document.createElement("style");
+  style.id = BF_CLEAN_STYLE_ID;
+  style.textContent = `
+    /* Clean-mode search DOM (what we style):
+     *   .center-search-container.offset-center-search   <- outer box (fixed, centered, width 584px/92vw)
+     *     └── .center-search__bar                        <- wrapper (no shadow/border; focus shadow + radius)
+     *           ├── #nav-searchform                       <- THE SEARCH BAR: white bar + input + search btn
+     *           │     ├── .nav-search-content             <- wraps the input
+     *           │     │     └── input.nav-search-input    <- the text field
+     *           │     └── .nav-search-btn                <- magnifier button
+     *           └── .search-panel                        <- dropdown (suggestions when you type)
+     */
+    html.${BF_CLEAN_MODE_CLASS}, html.${BF_CLEAN_MODE_CLASS} body {
+      height: 100% !important;
+      overflow: hidden !important;
+      background: #fff !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app .bili-mini-mask {
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app .center-search-container.offset-center-search {
+      visibility: visible !important;
+      pointer-events: auto !important;
+      position: fixed !important;
+      top: 40vh !important;
+      left: 50vw !important;
+      transform: translate(-50%, -50%) !important;
+      width: min(584px, 92vw) !important;
+      margin: 0 !important;
+      z-index: 2147483646 !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app .center-search-container .center-search__bar {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app .center-search-container .center-search__bar:hover {
+      box-shadow: none !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app .center-search-container .center-search__bar:focus-within {
+      box-shadow: -6px 0 10px -8px rgba(32, 33, 36, 0.3), 6px 0 10px -8px rgba(32, 33, 36, 0.3), 0 -6px 10px -8px rgba(32, 33, 36, 0.3) !important;
+      border-radius: 24px 24px 0 0 !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app .center-search-container .center-search__bar * {
+      box-shadow: none !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform {
+      background: #fff !important;
+      border: none !important;
+      border-radius: 24px !important;
+      box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28) !important;
+      overflow: hidden !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform:hover {
+      box-shadow: 0 1px 8px rgba(32, 33, 36, 0.3) !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform:focus-within {
+      border-radius: 24px 24px 0 0 !important;
+      box-shadow: -6px 0 10px -8px rgba(32, 33, 36, 0.3), 6px 0 10px -8px rgba(32, 33, 36, 0.3), 0 -6px 10px -8px rgba(32, 33, 36, 0.3) !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform * {
+      box-shadow: none !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-input,
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-keyword,
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform input {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 12px 16px 12px 20px !important;
+      font-size: 16px !important;
+      color: #202124 !important;
+      font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-content,
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-content:focus-within,
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-content:hover,
+    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-content:focus {
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+    html.${BF_CLEAN_MODE_CLASS} #app .v-popover {
+      display: none !important;
+    }
+  `;
+  (document.head || document.documentElement).appendChild(style);
+}
+
+function bfCleanEnableMode() {
+  bfCleanInjectStyle();
+  document.documentElement.classList.add(BF_CLEAN_MODE_CLASS);
+}
+
+function bfCleanDisableMode() {
+  document.documentElement.classList.remove(BF_CLEAN_MODE_CLASS);
+  document.getElementById(BF_FAKE_AVATAR_ID)?.remove();
+  const wrap = document.querySelector("#app .right-entry > :first-child");
+  const container = wrap?.firstElementChild;
+  if (wrap) {
+    wrap.style.pointerEvents = "";
+    wrap.style.visibility = "";
+  }
+  if (container) container.style.pointerEvents = "";
+}
+
+function bfCleanMakeFakeAvatar() {
+  const wrap = document.querySelector("#app .right-entry > :first-child");
+  const container = wrap?.firstElementChild;
+  const popover = wrap?.querySelector(":scope > .v-popover");
+  if (!wrap || !container) return false;
+  if (popover) {
+    popover.style.display = "none";
+    popover.style.pointerEvents = "none";
+  }
+  document.getElementById(BF_FAKE_AVATAR_ID)?.remove();
+  const img = container.querySelector("img") || container.querySelector("picture img");
+  const r = container.getBoundingClientRect();
+  const size = Math.round(Math.max(r.width, r.height)) || 36;
+  const fake = document.createElement("div");
+  fake.id = BF_FAKE_AVATAR_ID;
+  fake.style.cssText = `
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    width: ${size}px;
+    height: ${size}px;
+    border-radius: 9999px;
+    overflow: hidden;
+    z-index: 2147483647;
+    cursor: pointer;
+    transition: transform 120ms ease;
+    transform-origin: center center;
+    box-shadow: 0 0 0 2px #ffffff;
+  `;
+  if (img && img.src) {
+    const im = document.createElement("img");
+    im.src = img.src;
+    im.alt = "";
+    im.referrerPolicy = "no-referrer";
+    im.style.cssText = "width: 100%; height: 100%; object-fit: cover; display: block;";
+    fake.appendChild(im);
+  } else {
+    const label = document.createElement("span");
+    label.textContent = "登录";
+    label.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background-color: #00aeec;
+      font-family: "PingFang SC", HarmonyOS_Regular, "Helvetica Neue", Microsoft, sans-serif;
+      font-weight: 600;
+      color: #fff;
+      font-size: 18px;
+    `;
+    fake.appendChild(label);
+  }
+  fake.addEventListener("mouseenter", () => (fake.style.transform = "scale(1.08)"));
+  fake.addEventListener("mouseleave", () => (fake.style.transform = "scale(1)"));
+  fake.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let clickable = container.querySelector("a, button") || container;      // this is for normal senario, when the user is logged in. The element selected should be a <a>
+    if (clickable.tagName !== "A") clickable = clickable.firstElementChild;     // this is for the case when the user is not logged in. The element selected should be div.right-entry__outside.go-login-btn
+    clickable.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+  });
+  wrap.style.pointerEvents = "none";
+  wrap.style.visibility = "hidden";
+  container.style.pointerEvents = "none";
+  document.body.appendChild(fake);
+  return true;
+}
+
+function bfCleanWaitForTargets(timeoutMs) {
+  const start = Date.now();
+  return (async () => {
+    while (Date.now() - start < timeoutMs) {
+      const app = document.querySelector("#app");
+      const search = document.querySelector("#app .center-search-container.offset-center-search");
+      const wrap = document.querySelector("#app .right-entry > :first-child");
+      const container = wrap?.firstElementChild;
+      if (app && search && wrap && container) return true;
+      await bfCleanSleep(200);
+    }
+    return false;
+  })();
+}
+
+function bfCleanStartAvatarSync() {
+  const wrap = document.querySelector("#app .right-entry > :first-child");
+  const container = wrap?.firstElementChild;
+  if (!wrap || !container) return;
+  const obs = new MutationObserver(() => {
+    const fake = document.getElementById(BF_FAKE_AVATAR_ID);
+    if (!fake) return;
+    const realImg = container.querySelector("img") || container.querySelector("picture img");
+    const fakeImg = fake.querySelector("img");
+    if (realImg?.src && fakeImg && fakeImg.src !== realImg.src) fakeImg.src = realImg.src;
+  });
+  obs.observe(container, { childList: true, subtree: true, attributes: true });
+  window[BF_CLEAN_KEY] = { obs };
+}
+
+function bfCleanTeardown() {
+  document.getElementById(BF_CLEAN_STYLE_ID)?.remove();
+  document.getElementById(BF_FAKE_AVATAR_ID)?.remove();
+  if (window[BF_CLEAN_KEY]?.obs) {
+    window[BF_CLEAN_KEY].obs.disconnect();
+  }
+  delete window[BF_CLEAN_KEY];
+}
+
 // this is the core function to hiding the sections
 // before_dom_load is the flag to indicate whether this function is called before the DOM is loaded (see bottom of script for usage)
 function hideElements(before_dom_load = false) {
@@ -280,6 +519,19 @@ function hideElements(before_dom_load = false) {
     }
   });
 
+  // Run only once per turn-on; only when URL is exactly https://bilibili.com or https://www.bilibili.com
+  if (cleanMode && !cleanModeLogicRanThisSession && bfCleanIsMainPageExactly()) {
+    cleanModeLogicRanThisSession = true;
+    bfCleanTeardown();
+    bfCleanEnableMode();
+    (async () => {
+      const ok = await bfCleanWaitForTargets(12000);
+      if (!cleanMode) return;
+      if (!ok) return;
+      if (bfCleanMakeFakeAvatar()) bfCleanStartAvatarSync();
+    })();
+  }
+
   // Hide search box placeholder text via CSS to prevent flash before JS clears attributes
   if (settings.searchrecom) {
     addGlobalStyle(".nav-search-input::placeholder, .nav-search-keyword::placeholder { color: transparent !important; opacity: 0 !important; }", "bili-focus-style-searchrecom");
@@ -316,10 +568,11 @@ let is_first_personal_page_check = true;
 let lastHideElementsTime = 0; // limit the number of calls of hideElements
 const HIDE_ELEMENTS_MIN_DELAY = 50;
 function initialLogicBody() {
-  chrome.storage.local.get(Object.keys(settings), function(result) {
+  chrome.storage.local.get(Object.keys(settings).concat(['cleanMode']), function(result) {
     Object.keys(settings).forEach(key => {
       settings[key] = result[key] !== undefined ? result[key] : settings[key];
     });
+    cleanMode = !!result.cleanMode;
     // Execute code after retrieving data
     function runMainCode(check = true) {
       const currentTime = Date.now();
@@ -388,7 +641,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return;
     }
     
-    settings[request.field] = request.value;
+    if (request.field === "cleanMode") {
+      cleanMode = request.value;
+    } else {
+      settings[request.field] = request.value;
+    }
     
     if (request.value == true) {     // if the user turned the option on
       if (request.field == "vidrecom") {
@@ -417,6 +674,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           if (title !== '') el.setAttribute("title", title);
           else el.removeAttribute("title");
         });
+      } else
+      if (request.field == "cleanMode") {
+        // clean mode turn-off: teardown/revert only when on exactly https://bilibili.com; always reset session flag
+        if (bfCleanIsMainPageExactly()) {
+          bfCleanTeardown();
+          bfCleanDisableMode();
+        }
+        cleanModeLogicRanThisSession = false;
       } else 
       if (request.field == "ads") {
         remove_ads_from_mainpagerecom(false);
@@ -447,10 +712,11 @@ if (document.readyState === "loading") {
 } else {
   initialLogicBody();
 }
-chrome.storage.local.get(Object.keys(settings), function(result) {
+chrome.storage.local.get(Object.keys(settings).concat(['cleanMode']), function(result) {
   Object.keys(settings).forEach(key => {
     settings[key] = result[key] !== undefined ? result[key] : settings[key];
   });
+  cleanMode = !!result.cleanMode;
   hideElements(true);
 });
 
