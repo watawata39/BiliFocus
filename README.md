@@ -22,7 +22,7 @@ A browser extension that helps you use [bilibili.com](https://www.bilibili.com) 
 ### Official Installation
 
 - **Chrome:** [Chrome Web Store](https://chromewebstore.google.com/detail/gajajdkempljdpgemhemkbecmenphaff)
-- **Edge:** *(add Edge Add-ons link when published)*
+- **Edge:** [Edge Add-On Store](https://microsoftedge.microsoft.com/addons/detail/iagljcobapmdclldjpknlofajmafjdda)
 - **Firefox:** *(add addons.mozilla.org link when published)*
 
 ### Or Manually Install
