@@ -8,6 +8,7 @@ const supportedLangs = ['zh', 'en', 'ja'];
 let messagesCache = {};
 let currentMessages = null;
 let currentLanguage = 'zh';
+let updateChoicesScrollLimit = () => {};
 
 function adjust_button() {
   updateButtonText();
@@ -102,6 +103,7 @@ async function applyLanguage(lang) {
 
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja' : 'en';
   updateButtonText();
+  requestAnimationFrame(updateChoicesScrollLimit);
   chrome.storage.local.set({ language: lang });
 }
 
@@ -358,18 +360,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Scroll behaviour control
   const choicesContainer = document.querySelector(".choices_container");
-  const reference = document.querySelector("#bottom-btn");
+  const POPUP_MAX_HEIGHT = 600;
+  const POPUP_SCREEN_GAP = 80;
+  const MIN_CHOICES_HEIGHT = 180;
 
   function checkOverflow() {
-    if (choicesContainer.scrollHeight > choicesContainer.clientHeight) {
-      // Add margin when content is scrollable
-      choicesContainer.style.marginBottom = '15px';
-    } else {
-      // Remove margin when no overflow
-      choicesContainer.style.marginBottom = '5px';
+    choicesContainer.classList.toggle(
+      "has-overflow",
+      choicesContainer.scrollHeight > choicesContainer.clientHeight
+    );
+  }
+
+  updateChoicesScrollLimit = function() {
+    choicesContainer.style.maxHeight = 'none';
+    choicesContainer.style.overflowY = 'hidden';
+
+    const naturalChoicesHeight = choicesContainer.scrollHeight;
+    const choicesHeight = choicesContainer.getBoundingClientRect().height;
+    const fullPopupHeight = document.documentElement.scrollHeight;
+    const outsideChoicesHeight = fullPopupHeight - choicesHeight;
+    const availableScreenHeight = window.screen?.availHeight || POPUP_MAX_HEIGHT;
+    const screenLimitedHeight = availableScreenHeight > POPUP_SCREEN_GAP
+      ? availableScreenHeight - POPUP_SCREEN_GAP
+      : POPUP_MAX_HEIGHT;
+    const maxPopupHeight = Math.min(POPUP_MAX_HEIGHT, screenLimitedHeight);
+    const maxChoicesHeight = Math.max(MIN_CHOICES_HEIGHT, maxPopupHeight - outsideChoicesHeight);
+    const appliedChoicesHeight = Math.min(naturalChoicesHeight, maxChoicesHeight);
+
+    choicesContainer.style.maxHeight = `${appliedChoicesHeight}px`;
+    choicesContainer.style.overflowY = naturalChoicesHeight > appliedChoicesHeight ? 'auto' : 'hidden';
+    checkOverflow();
+  };
+
+  function scrollContentIntoChoices(content) {
+    const containerRect = choicesContainer.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
+
+    if (contentRect.bottom > containerRect.bottom) {
+      choicesContainer.scrollBy({
+        top: contentRect.bottom - containerRect.bottom,
+        behavior: 'smooth',
+      });
+    } else if (contentRect.top < containerRect.top) {
+      choicesContainer.scrollBy({
+        top: contentRect.top - containerRect.top,
+        behavior: 'smooth',
+      });
     }
   }
-  checkOverflow();
+
+  updateChoicesScrollLimit();
+  window.addEventListener('resize', updateChoicesScrollLimit);
 
   // Group Displays
   const groupTitles = document.querySelectorAll(".group-title");
@@ -393,17 +434,16 @@ document.addEventListener('DOMContentLoaded', function() {
       if (isCurrentlyHidden) {
         content.style.display = "block";
         title.classList.remove("collapsed");
-        
-        // Scroll the expanded content into view
-        setTimeout(() => {
-          content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 50);
+
+        updateChoicesScrollLimit();
+        requestAnimationFrame(() => {
+          scrollContentIntoChoices(content);
+        });
       } else {
         content.style.display = "none";
         title.classList.add("collapsed");
+        updateChoicesScrollLimit();
       }
-      
-      checkOverflow();
     });
   });
 });

@@ -264,15 +264,6 @@ function bfCleanInjectStyle() {
   style = document.createElement("style");
   style.id = BF_CLEAN_STYLE_ID;
   style.textContent = `
-    /* Clean-mode search DOM (what we style):
-     *   .center-search-container.offset-center-search   <- outer box (fixed, centered, width 584px/92vw)
-     *     └── .center-search__bar                        <- wrapper (no shadow/border; focus shadow + radius)
-     *           ├── #nav-searchform                       <- THE SEARCH BAR: white bar + input + search btn
-     *           │     ├── .nav-search-content             <- wraps the input
-     *           │     │     └── input.nav-search-input    <- the text field
-     *           │     └── .nav-search-btn                <- magnifier button
-     *           └── .search-panel                        <- dropdown (suggestions when you type)
-     */
     html.${BF_CLEAN_MODE_CLASS}, html.${BF_CLEAN_MODE_CLASS} body {
       height: 100% !important;
       overflow: hidden !important;
@@ -292,64 +283,18 @@ function bfCleanInjectStyle() {
       position: fixed !important;
       top: 40vh !important;
       left: 50vw !important;
-      transform: translate(-50%, -50%) !important;
-      width: min(584px, 92vw) !important;
+      width: min(760px, 88vw) !important;
+      transform: translate(-50%, -50%) scale(1.06) !important;
+      transform-origin: center center !important;
       margin: 0 !important;
       z-index: 2147483646 !important;
     }
-    html.${BF_CLEAN_MODE_CLASS} #app .center-search-container .center-search__bar {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app .center-search-container .center-search__bar:hover {
-      box-shadow: none !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app .center-search-container .center-search__bar:focus-within {
-      box-shadow: -6px 0 10px -8px rgba(32, 33, 36, 0.3), 6px 0 10px -8px rgba(32, 33, 36, 0.3), 0 -6px 10px -8px rgba(32, 33, 36, 0.3) !important;
-      border-radius: 24px 24px 0 0 !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app .center-search-container .center-search__bar * {
-      box-shadow: none !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform {
-      background: #fff !important;
-      border: none !important;
-      border-radius: 24px !important;
-      box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28) !important;
-      overflow: hidden !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform:hover {
-      box-shadow: 0 1px 8px rgba(32, 33, 36, 0.3) !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform:focus-within {
-      border-radius: 24px 24px 0 0 !important;
-      box-shadow: -6px 0 10px -8px rgba(32, 33, 36, 0.3), 6px 0 10px -8px rgba(32, 33, 36, 0.3), 0 -6px 10px -8px rgba(32, 33, 36, 0.3) !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform * {
-      box-shadow: none !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-input,
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-keyword,
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform input {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 12px 16px 12px 20px !important;
-      font-size: 16px !important;
-      color: #202124 !important;
-      font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-content,
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-content:focus-within,
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-content:hover,
-    html.${BF_CLEAN_MODE_CLASS} #app #nav-searchform .nav-search-content:focus {
-      background: transparent !important;
-      box-shadow: none !important;
-    }
-    html.${BF_CLEAN_MODE_CLASS} #app .v-popover {
-      display: none !important;
+    @media (max-width: 520px) {
+      html.${BF_CLEAN_MODE_CLASS} #app .center-search-container.offset-center-search {
+        top: 34vh !important;
+        width: 88vw !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+      }
     }
   `;
   (document.head || document.documentElement).appendChild(style);

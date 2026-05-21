@@ -48,10 +48,12 @@
       }
 
       .choices_container {
+        box-sizing: border-box;
         padding: 15px;
         margin-bottom: 5px;
-        max-height: 350px;
-        overflow-y: scroll;
+        max-height: none;
+        overflow-y: auto;
+        scrollbar-gutter: stable;
         scrollbar-width: thin;
         scrollbar-color: var(--group-border) transparent;
         background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
