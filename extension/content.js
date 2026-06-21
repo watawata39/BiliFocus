@@ -34,9 +34,11 @@ function remove_by_element(target, remove = true) {
 // searchrecom: store original placeholder/title for restore when option is turned off
 var original_placeholder = '', original_title = '';
 var searchrecomObserver = null; // one-shot observer to clear search inputs when they appear
+const SEARCH_INPUT_SELECTORS = ".nav-search-input, .nav-search-keyword, #nav-searchform > div.p-relative.search-bar.over-hidden.border-box.t-nowrap > input";
+const SEARCH_INPUT_PLACEHOLDER_SELECTORS = ".nav-search-input::placeholder, .nav-search-keyword::placeholder, #nav-searchform > div.p-relative.search-bar.over-hidden.border-box.t-nowrap > input::placeholder";
 function clearSearchInputSuggestions() {
   function clearInputs() {
-    const inputs = document.querySelectorAll(".nav-search-input, .nav-search-keyword");
+    const inputs = document.querySelectorAll(SEARCH_INPUT_SELECTORS);
     if (inputs.length === 0) return false;
     const first = inputs[0];
     if (original_placeholder === '' && original_title === '') {
@@ -190,7 +192,8 @@ const modifications = {
     ["styles2", ".left-entry > :nth-child(2),.left-entry > :nth-child(3),.left-entry > :nth-child(4),.left-entry > :nth-child(5),.left-entry > :nth-child(6),.left-entry > :nth-child(7),.left-entry > :nth-child(8),.left-entry > :nth-child(9),.left-entry > :nth-child(10),.left-entry > :nth-child(11),.left-entry > :nth-child(12),"], // this style2 is to immediately hide the fixed parts of the leftnavi to eliminate the flash effect
     ["styles2", ".nav-link-ul.mini > :nth-child(2),.nav-link-ul.mini > :nth-child(3),.nav-link-ul.mini > :nth-child(4),.nav-link-ul.mini > :nth-child(5),.nav-link-ul.mini > :nth-child(6),.nav-link-ul.mini > :nth-child(7),.nav-link-ul.mini > :nth-child(8),.nav-link-ul.mini > :nth-child(9),.nav-link-ul.mini > :nth-child(10),.nav-link-ul.mini > :nth-child(11),.nav-link-ul.mini > :nth-child(12),"],
     ["styles2", "#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(2),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(3),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(4),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(5),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(6),#biliMainHeader > div > div > ul.BiliHeaderV3_leftEntry__TrayO > :nth-child(7),"], // elements that flash by when bilibili.com/bangumi/play is loaded
-    ["styles2", "#left-part > div > div > div.flex-block > div,#left-part > div > div > div.showmore-link.p-relative.f-left,"], // streaming page
+    ["styles2", "#prehold-nav-vm > div > div:nth-of-type(n+3):nth-of-type(-n+16),"],  // elements that flash by when https://live.bilibili.com/ is loaded
+    ["styles2", "#left-part > div > div > div.flex-block > div,#left-part > div > div > div.flex-block > div > div > div.dp-table-cell.v-middle,#left-part > div > div > div.showmore-link.p-relative.f-left,"], // streaming page
     ["hideDropdownOnHover"]], // keep here for consistency, does nothing at all. Feature implemented by observer. Search for 'hideIfPresent'
   searchrecom: [
     ["styles", ".trending,.bili-dyn-topic-box,.topic-panel,.channel-menu-mini,.bili-dyn-search-trendings,"],
@@ -282,7 +285,7 @@ function hideElements(before_dom_load = false) {
 
   // Hide search box placeholder text via CSS to prevent flash before JS clears attributes
   if (settings.searchrecom) {
-    addGlobalStyle(".nav-search-input::placeholder, .nav-search-keyword::placeholder { color: transparent !important; opacity: 0 !important; }", "bili-focus-style-searchrecom");
+    addGlobalStyle(`${SEARCH_INPUT_PLACEHOLDER_SELECTORS} { color: transparent !important; opacity: 0 !important; }`, "bili-focus-style-searchrecom");
   } else {
     addGlobalStyle("", "bili-focus-style-searchrecom");
   }
@@ -412,7 +415,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Page loaded with searchrecom on: we never captured originals, so use 搜索
         const place = original_placeholder !== '' ? original_placeholder : '搜索';
         const title = original_title !== '' ? original_title : '';
-        document.querySelectorAll(".nav-search-input, .nav-search-keyword").forEach(el => {
+        document.querySelectorAll(SEARCH_INPUT_SELECTORS).forEach(el => {
           el.setAttribute("placeholder", place);
           if (title !== '') el.setAttribute("title", title);
           else el.removeAttribute("title");
