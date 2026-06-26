@@ -12,6 +12,8 @@ A browser extension that helps you use [bilibili.com](https://www.bilibili.com) 
   - **General:** Home page recommendations, video recommendations, video/post comments, search recommendations, top-left navi, all ads.
   - **Top-right navi:** Membership icon, messages icon, subscription posts icon, favourites icon, history icon, creativity center & post icon.
   - **Personal homepage** (on your own space page only): My videos, favourites, subscribed animes, recent coins, collections, columns, recent likes, left sidebar.
+- **Clean Search Mode** — Turn the Bilibili main page into a quiet search-focused page. It keeps the search bar, avatar, and selected top-right navigation items while hiding homepage recommendations, search recommendations, ads, and the top-left navigation.
+- **Custom homepage background** — In Clean Search Mode, choose a built-in wallpaper, a solid color, or upload one custom image.
 - **“/” to search** — Press `/` (like on YouTube) to focus the search bar from anywhere on the site.
 - **Multilingual** — Interface in 简体中文, English, and 日本語.
 
@@ -37,7 +39,9 @@ A browser extension that helps you use [bilibili.com](https://www.bilibili.com) 
 2. Click the BiliFocus icon in the toolbar.
 3. Toggle the options you want to hide or show.
 
-Use **Settings** icon at the top-right corner in the popup to switch language or turn the “/” search shortcut on or off.
+Clean Search Mode is enabled by default and only affects the Bilibili main page (`https://www.bilibili.com/`). You can turn it off in the popup. While it is enabled, homepage recommendations, search recommendations, ads, and the top-left navigation are locked as hidden.
+
+Use the **Settings** icon at the top-right corner in the popup to switch language or turn the “/” search shortcut on or off.
 
 ---
 
