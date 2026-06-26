@@ -5,7 +5,7 @@ Increase your productivity and elevate your browsing experience on Bilibili by r
 Open source on GitHub:
 https://github.com/watawata39/BiliFocus
 
----
+⸻
 
 Key Features
 
@@ -21,7 +21,7 @@ Press / to focus the search bar quickly, YouTube-style.
 * Multilingual Interface
 The popup interface supports Simplified Chinese, English, and Japanese.
 
----
+⸻
 
 Blockable Items
 
@@ -51,12 +51,11 @@ Personal Homepage
   19. Recent Likes
   20. Left Sidebar
 
----
-
-Notes
-
 * BiliFocus is designed for Bilibili's current/new UI.
 
+⸻
+
+Notes:
 This project was originally developed for personal use. As long as I continue using Bilibili, BiliFocus will remain actively maintained.
 
 Feedback and suggestions are welcome:

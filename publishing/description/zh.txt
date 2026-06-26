@@ -3,7 +3,7 @@
 GitHub 开源：
 https://github.com/watawata39/BiliFocus
 
----
+⸻
 
 主要功能
 
@@ -19,7 +19,7 @@ https://github.com/watawata39/BiliFocus
 * 多语言界面
 扩展弹窗支持简体中文、English、日本語。
 
----
+⸻
 
 可隐藏项目
 
@@ -49,12 +49,11 @@ https://github.com/watawata39/BiliFocus
   19. 最近点赞的视频
   20. 左侧边栏
 
----
-
-备注
-
 * BiliFocus 主要适配b站当前新版界面。
 
+⸻
+
+备注：
 本项目最初为个人使用而开发。只要我继续使用b站，BiliFocus就会继续受到维护。
 
 欢迎反馈和建议：
