@@ -1,0 +1,96 @@
+{
+  "earth1.jpg": {
+    "name": "Earth in View",
+    "url": "https://images.nasa.gov/details/art002e023506",
+    "creator": "NASA",
+    "title": "Earth in View",
+    "ui_foreground": {
+      "logo": "light",
+      "right_nav": "light",
+      "brand": "light"
+    }
+  },
+  "earth2.jpg": {
+    "name": "Orbital Sunset",
+    "url": "https://images.nasa.gov/details/iss074e0556690",
+    "creator": "NASA",
+    "title": "The last rays of an orbital sunset illuminate Earth's atmosphere and the cloud tops",
+    "ui_foreground": {
+      "logo": "light",
+      "right_nav": "light",
+      "brand": "light"
+    }
+  },
+  "earth3.jpg": {
+    "name": "Earth Observation",
+    "url": "https://images.nasa.gov/details/iss036e005964",
+    "creator": "NASA",
+    "title": "Earth Observation",
+    "ui_foreground": {
+      "logo": "light",
+      "right_nav": "light",
+      "brand": "light"
+    }
+  },
+  "milkyway.jpg": {
+    "name": "Milky Way Airglow",
+    "url": "https://images.nasa.gov/details/iss073e0982679",
+    "creator": "NASA",
+    "title": "The Milky Way spans the night sky above a bright orange-yellow airglow",
+    "ui_foreground": {
+      "logo": "light",
+      "right_nav": "light",
+      "brand": "light"
+    }
+  },
+  "startrail.jpg": {
+    "name": "Star Trail",
+    "url": "https://unsplash.com/photos/blue-and-white-light-digital-wallpaper-ZlJSyJSXSRU",
+    "creator": "Олег Мороз",
+    "ui_foreground": {
+      "logo": "light",
+      "right_nav": "light",
+      "brand": "light"
+    }
+  },
+  "gradient1.jpg": {
+    "name": "Color Gradient",
+    "url": "https://unsplash.com/photos/a-couple-of-cows-standing-on-top-of-a-grass-covered-field-27HiryxnHJk",
+    "creator": "César Couto",
+    "ui_foreground": {
+      "logo": "light",
+      "right_nav": "light",
+      "brand": "light"
+    }
+  },
+  "gradient2.jpg": {
+    "name": "Color Gradient",
+    "url": "https://unsplash.com/photos/a-blue-sky-with-a-few-clouds-nIlwOYUbQEA",
+    "creator": "Mohammad Alizade",
+    "ui_foreground": {
+      "logo": "dark",
+      "right_nav": "dark",
+      "brand": "dark"
+    }
+  },
+  "gradient3.jpg": {
+    "name": "Color Gradient",
+    "url": "https://unsplash.com/photos/a-blurry-photo-of-a-plane-flying-in-the-sky-oPH_5xuMgQw",
+    "creator": "MagicPattern",
+    "ui_foreground": {
+      "logo": "light",
+      "right_nav": "dark",
+      "brand": "light"
+    }
+  },
+  "sea.jpg": {
+    "name": "Open Sea",
+    "url": "https://unsplash.com/photos/blue-ocean-water-during-daytime-cfR-V1QuEKw",
+    "creator": "yucar studios",
+    "ui_foreground": {
+      "logo": "light",
+      "right_nav": "light",
+      "brand": "light"
+    }
+  }
+}

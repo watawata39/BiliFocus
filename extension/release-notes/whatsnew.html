@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiliFocus 2.1.0</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --blue: #007bff;
+      --blue-dark: #0056b3;
+      --bg: #f4f8ff;
+      --surface: rgba(255, 255, 255, 0.88);
+      --text: #182133;
+      --muted: #667085;
+      --border: rgba(24, 33, 51, 0.12);
+      --shadow: 0 22px 70px rgba(24, 33, 51, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      font-family: Arial, "Microsoft YaHei", "PingFang SC", sans-serif;
+      background:
+        radial-gradient(circle at 18% 16%, rgba(0, 123, 255, 0.16), transparent 28%),
+        radial-gradient(circle at 82% 20%, rgba(120, 190, 255, 0.18), transparent 26%),
+        linear-gradient(135deg, #f7fbff 0%, var(--bg) 52%, #eef5ff 100%);
+    }
+
+    main {
+      width: min(860px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 72px 0 56px;
+    }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero {
+      padding: 42px 48px 34px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(230, 243, 255, 0.68));
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .brand img {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 700px;
+      font-size: 38px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 18px 0 0;
+      max-width: 660px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    .content {
+      padding: 34px 48px 42px;
+    }
+
+    .version {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin-bottom: 22px;
+      padding: 0 12px;
+      border: 1px solid rgba(0, 123, 255, 0.2);
+      border-radius: 999px;
+      background: rgba(0, 123, 255, 0.08);
+      color: var(--blue-dark);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .features {
+      display: grid;
+      gap: 28px;
+      margin: 0 0 30px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .feature {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #ffffff;
+    }
+
+    .feature-media {
+      background: #edf3fb;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .feature-media img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .feature-copy {
+      padding: 22px 24px 24px;
+    }
+
+    .feature h2 {
+      margin: 0 0 10px;
+      font-size: 21px;
+      line-height: 1.32;
+      letter-spacing: 0;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.68;
+    }
+
+    .feature.extra-section {
+      margin: 0 0 30px;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    button {
+      min-height: 38px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    button:hover {
+      background: var(--blue-dark);
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: min(100vw - 24px, 860px);
+        padding: 28px 0;
+      }
+
+      .hero,
+      .content {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      .feature-copy {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel">
+      <div class="hero">
+        <div class="brand">
+          <img src="../icons/logo48.png" alt="">
+          <span>BiliFocus</span>
+        </div>
+        <h1 id="title">BiliFocus 更新了</h1>
+        <p class="subtitle" id="subtitle">这个版本加入了清爽搜索模式。它会把 B 站首页变成一个更安静的搜索入口，并支持自定义背景。</p>
+      </div>
+      <div class="content">
+        <div class="version" id="version">Version 2.1.0</div>
+        <ul class="features" id="features"></ul>
+        <section class="feature extra-section" id="turnoff-section"></section>
+        <div class="actions">
+          <button type="button" id="close">知道了</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="whatsnew.js"></script>
+</body>
+</html>

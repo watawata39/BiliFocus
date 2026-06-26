@@ -1,16 +1,19 @@
-false_count = 0;
+let false_count = 0;
 
 // Map stored language preference to _locales folder name
 const langToLocale = { zh: 'zh_CN', en: 'en', ja: 'ja' };
 const supportedLangs = ['zh', 'en', 'ja'];
+const cleanSearchLockedKeys = ['homepagerecom', 'searchrecom', 'ads', 'leftnavi'];
 
 // Cached messages per locale (from _locales/<locale>/messages.json)
 let messagesCache = {};
 let currentMessages = null;
-let currentLanguage = 'zh';
+let currentLanguage = 'en';
+let cleanSearchModeEnabled = true;
 
 function adjust_button() {
   updateButtonText();
+  updateCleanSearchButtonText();
 }
 
 function getMessage(messages, key) {
@@ -72,6 +75,8 @@ async function applyLanguage(lang) {
   if (settingsBtn) settingsBtn.title = getMessage(content, 'settingsBtnTitle');
   const bottomBtn = document.getElementById('bottom-btn');
   if (bottomBtn) bottomBtn.title = getMessage(content, 'bottomBtnTitle');
+  const cleanSearchBtn = document.getElementById('clean-search-btn');
+  if (cleanSearchBtn) cleanSearchBtn.title = getMessage(content, 'cleanSearchModeTitle');
 
   const modalCloseBtn = document.getElementById('modal-close-btn');
   if (modalCloseBtn) modalCloseBtn.textContent = getMessage(content, 'modalCloseBtn');
@@ -91,6 +96,8 @@ async function applyLanguage(lang) {
 
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja' : 'en';
   updateButtonText();
+  updateCleanSearchButtonText();
+  updateCleanSearchLockText();
   chrome.storage.local.set({ language: lang });
 }
 
@@ -105,9 +112,44 @@ function updateButtonText() {
   }
 }
 
+function updateCleanSearchButtonText() {
+  const btn = document.getElementById('clean-search-btn');
+  const text = document.getElementById('clean-search-btn-text');
+  const content = currentMessages || messagesCache[langToLocale[currentLanguage]];
+  if (!btn || !text || !content) return;
+
+  btn.classList.toggle('active', cleanSearchModeEnabled);
+  btn.setAttribute('aria-checked', cleanSearchModeEnabled ? 'true' : 'false');
+  btn.setAttribute('aria-label', getMessage(content, cleanSearchModeEnabled ? 'cleanSearchModeOn' : 'cleanSearchModeOff'));
+  text.textContent = getMessage(content, 'cleanSearchModeLabel') || getMessage(content, 'cleanSearchModeTitle');
+}
+
+function getCleanSearchLockTooltip(content) {
+  return getMessage(content, 'lockedByCleanSearchModeTooltip') || getMessage(content, 'lockedByCleanSearchMode') || 'Locked by Clean Search Mode';
+}
+
+function updateCleanSearchLockText() {
+  const content = currentMessages || messagesCache[langToLocale[currentLanguage]];
+  const lockText = getMessage(content, 'lockedByCleanSearchMode') || 'Locked';
+  const lockTooltip = getCleanSearchLockTooltip(content);
+  cleanSearchLockedKeys.forEach((key) => {
+    const note = document.querySelector(`[data-lock-note="${key}"]`);
+    if (note) note.textContent = lockText;
+    const input = document.getElementById(key);
+    const label = input ? input.closest('label') : null;
+    if (label && label.classList.contains('locked-option')) {
+      label.title = lockTooltip;
+      input.title = lockTooltip;
+    } else if (label && input) {
+      label.removeAttribute('title');
+      input.removeAttribute('title');
+    }
+  });
+}
+
 function setupLanguageSwitching() {
   chrome.storage.local.get(['language', 'slashfocus'], async function(result) {
-    const savedLanguage = supportedLangs.includes(result.language) ? result.language : 'zh';
+    const savedLanguage = supportedLangs.includes(result.language) ? result.language : 'en';
     await applyLanguage(savedLanguage);
 
     const slashToggle = document.getElementById('slashfocus-toggle');
@@ -190,6 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Set up language switching
   setupLanguageSwitching();
+  const cleanSearchDefault = true;
   const defaults = {
     homepagerecom: true,
     vidrecom: true,
@@ -213,20 +256,13 @@ document.addEventListener('DOMContentLoaded', function() {
     usrpageleftsidebar: true,
   };
 
-  // Load stored settings or set defaults if missing
-  chrome.storage.local.get(Object.keys(defaults), function(result) {
-    const toSet = {};
+  function recalculateFalseCount() {
+    false_count = 0;
     Object.keys(defaults).forEach(key => {
-      if (result[key] === undefined) {
-        toSet[key] = defaults[key];
-        if (!defaults[key]) false_count++;
-      } else if (!result[key]) false_count++;
-      document.getElementById(key).checked = result[key] !== undefined ? result[key] : defaults[key];
+      const input = document.getElementById(key);
+      if (input && !input.checked) false_count++;
     });
-    chrome.storage.local.set(toSet, () => console.log('Initial storage set:', toSet));
-
-    adjust_button();
-  });
+  }
 
   // Function to update storage whenever a checkbox changes
   function updateStorage(key, value) {
@@ -241,21 +277,76 @@ document.addEventListener('DOMContentLoaded', function() {
           action: "updateCheckbox",
           field: key,
           value: value
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.log(`Tab ${tab.id} does not have the content script:`, chrome.runtime.lastError.message);
-          }
+        }, () => {
+          // Most open tabs do not run this content script; consume Chrome's expected no-receiver error.
+          void chrome.runtime.lastError;
         });
       });
     });
   }
 
+  function applyCleanSearchLock(enabled) {
+    cleanSearchModeEnabled = enabled;
+    cleanSearchLockedKeys.forEach(key => {
+      const input = document.getElementById(key);
+      if (!input) return;
+      const label = input.closest('label');
+
+      if (enabled) {
+        input.checked = true;
+      }
+      input.disabled = enabled;
+      if (label) {
+        label.classList.toggle('locked-option', enabled);
+        if (enabled) {
+          const lockTooltip = getCleanSearchLockTooltip(currentMessages);
+          label.title = lockTooltip;
+          input.title = lockTooltip;
+        } else {
+          label.removeAttribute('title');
+          input.removeAttribute('title');
+        }
+      }
+    });
+    updateCleanSearchLockText();
+    recalculateFalseCount();
+    adjust_button();
+  }
+
+  // Load stored settings or set defaults if missing
+  chrome.storage.local.get([...Object.keys(defaults), 'cleansearchmode'], function(result) {
+    const toSet = {};
+    cleanSearchModeEnabled = result.cleansearchmode !== undefined ? !!result.cleansearchmode : cleanSearchDefault;
+    if (result.cleansearchmode === undefined) {
+      toSet.cleansearchmode = cleanSearchDefault;
+    }
+
+    Object.keys(defaults).forEach(key => {
+      let value = result[key] !== undefined ? result[key] : defaults[key];
+      if (cleanSearchModeEnabled && cleanSearchLockedKeys.includes(key)) {
+        value = true;
+      }
+      if (result[key] === undefined || (cleanSearchModeEnabled && cleanSearchLockedKeys.includes(key) && result[key] !== true)) {
+        toSet[key] = value;
+      }
+      document.getElementById(key).checked = value;
+    });
+    chrome.storage.local.set(toSet);
+    Object.entries(toSet).forEach(([key, value]) => updateStorage(key, value));
+
+    applyCleanSearchLock(cleanSearchModeEnabled);
+  });
+
   // Add change listeners for each checkbox with storage update
   Object.keys(defaults)
     .forEach(id => {
       document.getElementById(id).addEventListener('change', function() {
+        if (cleanSearchModeEnabled && cleanSearchLockedKeys.includes(id)) {
+          this.checked = true;
+          return;
+        }
         updateStorage(id, this.checked);
-        false_count += this.checked ? -1 : 1;
+        recalculateFalseCount();
         adjust_button();
       });
     });
@@ -263,27 +354,41 @@ document.addEventListener('DOMContentLoaded', function() {
   // Select All / Unselect All button logic
   document.getElementById('bottom-btn').addEventListener('click', function() {
     const set_to = false_count === 0 ? false : true;
-    false_count = set_to ? 0 : Object.keys(defaults).length;
     Object.keys(defaults).forEach(key => {
-      document.getElementById(key).checked = set_to;
-      updateStorage(key, set_to);
+      const value = cleanSearchModeEnabled && cleanSearchLockedKeys.includes(key) ? true : set_to;
+      document.getElementById(key).checked = value;
+      updateStorage(key, value);
     });
 
-    adjust_button();
+    applyCleanSearchLock(cleanSearchModeEnabled);
+  });
+
+  // Clean Search Mode toggle
+  document.getElementById('clean-search-btn').addEventListener('click', function() {
+    const nextValue = !cleanSearchModeEnabled;
+    updateStorage('cleansearchmode', nextValue);
+    if (nextValue) {
+      cleanSearchLockedKeys.forEach(key => {
+        document.getElementById(key).checked = true;
+        updateStorage(key, true);
+      });
+    }
+    applyCleanSearchLock(nextValue);
   });
 
   // Scroll behaviour control
   const choicesContainer = document.querySelector(".choices_container");
-  const reference = document.querySelector("#bottom-btn");
+  const popupMaxHeight = 560;
 
   function checkOverflow() {
-    if (choicesContainer.scrollHeight > choicesContainer.clientHeight) {
-      // Add margin when content is scrollable
-      choicesContainer.style.marginBottom = '15px';
-    } else {
-      // Remove margin when no overflow
-      choicesContainer.style.marginBottom = '5px';
-    }
+    choicesContainer.style.maxHeight = 'none';
+
+    const fullChoicesHeight = choicesContainer.scrollHeight;
+    const outsideChoicesHeight = document.body.scrollHeight - choicesContainer.offsetHeight;
+    const maxChoicesHeight = Math.max(120, popupMaxHeight - outsideChoicesHeight);
+
+    choicesContainer.style.maxHeight = `${Math.min(fullChoicesHeight, maxChoicesHeight)}px`;
+    choicesContainer.style.overflowY = fullChoicesHeight > maxChoicesHeight ? 'auto' : 'hidden';
   }
   checkOverflow();
 
@@ -313,6 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Scroll the expanded content into view
         setTimeout(() => {
           content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          checkOverflow();
         }, 50);
       } else {
         content.style.display = "none";

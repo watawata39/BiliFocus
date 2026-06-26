@@ -1,15 +1,32 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "__MSG_extDesc__",
   "default_locale": "zh_CN",
   "permissions": ["storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": ["*://*.bilibili.com/*"],
       "js": ["content.js"],
       "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/pen.svg",
+        "icons/BILIBILI_LOGO.svg",
+        "icons/cross.svg",
+        "icons/pallet.svg",
+        "icons/upload.svg",
+        "wallpapers/*.jpg",
+        "wallpapers/metadata.json"
+      ],
+      "matches": ["*://*.bilibili.com/*"]
     }
   ],
   "action": {
