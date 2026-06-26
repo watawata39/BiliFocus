@@ -1,5 +1,7 @@
 让您的b站体验螺旋喷气式上升！！！
 
+通过移除分散注意力或不需要的内容，提高您的生产力，全面提升您的b站浏览体验。
+
 GitHub 开源：
 https://github.com/watawata39/BiliFocus
 

@@ -1,5 +1,7 @@
 あなたのBilibili体験を、ロケットのように急上昇させよう！！！
 
+不要なコンテンツや気を散らす要素を取り除くことで、生産性を高め、Bilibili の閲覧体験をより快適にします。
+
 Githubオープンソース：
 https://github.com/watawata39/BiliFocus
 
