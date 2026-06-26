@@ -12,8 +12,7 @@ A browser extension that helps you use [bilibili.com](https://www.bilibili.com) 
   - **General:** Home page recommendations, video recommendations, video/post comments, search recommendations, top-left navi, all ads.
   - **Top-right navi:** Membership icon, messages icon, subscription posts icon, favourites icon, history icon, creativity center & post icon.
   - **Personal homepage** (on your own space page only): My videos, favourites, subscribed animes, recent coins, collections, columns, recent likes, left sidebar.
-- **Clean Search Mode** — Turn the Bilibili main page into a quiet search-focused page. It keeps the search bar, avatar, and selected top-right navigation items while hiding homepage recommendations, search recommendations, ads, and the top-left navigation.
-  - **Custom background:** Choose a built-in wallpaper, a solid color, or upload a custom image.
+- **Clean Search Mode** — Turn the Bilibili main page into a google-style search page. You can also customise the wallpaper! 
 - **“/” to search** — Press `/` (like on YouTube) to focus the search bar from anywhere on the site.
 - **Multilingual** — Interface in 简体中文, English, and 日本語.
 
