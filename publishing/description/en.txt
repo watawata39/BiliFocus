@@ -1,6 +1,6 @@
-BiliFocus helps you use Bilibili with fewer distractions.
+Skyrocket your experience on BiliBili! 
 
-Hide recommendations, comments, ads, navigation items, and personal homepage modules. Or use Clean Search Mode to turn the Bilibili homepage into a quiet, search-focused page.
+Increase your productivity and elevate your browsing experience on Bilibili by removing distracting or unwanted content!
 
 Open source on GitHub:
 https://github.com/watawata39/BiliFocus
@@ -9,19 +9,11 @@ https://github.com/watawata39/BiliFocus
 
 Key Features
 
-* Clean Search Mode
-Turn the Bilibili main page into a calm search page. It keeps the search bar, your avatar, and the top-right navigation items you choose to display, while hiding homepage recommendations, search recommendations, ads, and the top-left navigation.
-
-Clean Search Mode only affects the Bilibili main page and can be turned off at any time from the extension popup.
-
-* Custom Backgrounds
-Customize the Clean Search Mode background with built-in wallpapers, solid colors, or one uploaded image of your own.
-
 * Flexible Visibility Controls
 Choose exactly which Bilibili sections to hide or show. Settings are saved and applied instantly.
 
-* Top-Right Navigation Control
-Choose which top-right navigation items remain visible. In Clean Search Mode, visible right-navigation items are placed neatly on the left side of the page, with your avatar on the right.
+* Clean Search Mode
+Turn the Bilibili main page into a peaceful google-like search page, with customisable background.
 
 * "/" Search Shortcut
 Press / to focus the search bar quickly, YouTube-style.
@@ -63,8 +55,6 @@ Personal Homepage
 
 Notes
 
-* Clean Search Mode is enabled by default after installation or update. You can disable it in the popup.
-* Clean Search Mode only applies to https://www.bilibili.com/.
 * BiliFocus is designed for Bilibili's current/new UI.
 
 This project was originally developed for personal use. As long as I continue using Bilibili, BiliFocus will remain actively maintained.
