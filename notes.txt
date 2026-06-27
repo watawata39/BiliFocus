@@ -1,0 +1,10 @@
+Clean Search right-nav dropdown compromise
+
+Reproduce the problem:
+- Open a brand new bilibili.com page in clean search mode (BiliFocus version 2.1.0 or 2.1.1), and hover the cursor on a right-navi item. There may be a flash: the dropdown appears in the unaltered position, partly out of the window, and is then moved to an appropriate position.
+
+Bilibili plays its own fade/drop intro animation when those panels appear; hiding the panel until after the clamp calculation removes the overflow flash, but it also cuts into Bilibili's animation and looks worse.
+
+Current compromise:
+- Do not attempt to solve the initial opening flash for now.
+- Keep the version 2.1.0 clamp timing so Bilibili's native dropdown animation stays intact.

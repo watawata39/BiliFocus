@@ -2552,6 +2552,53 @@ function handleCleanSearchRightPopoverInteraction(event) {
   scheduleCleanSearchRightPopoverClampBurst();
 }
 
+function dispatchCleanSearchRightNavExitEvents(element) {
+  if (!(element instanceof Element)) return;
+
+  const relatedTarget = document.body || null;
+  const baseOptions = {
+    bubbles: true,
+    cancelable: true,
+    relatedTarget,
+    view: window,
+  };
+
+  if (typeof PointerEvent === "function") {
+    element.dispatchEvent(new PointerEvent("pointerout", { ...baseOptions, pointerType: "mouse" }));
+    element.dispatchEvent(new PointerEvent("pointerleave", { ...baseOptions, bubbles: false, pointerType: "mouse" }));
+  }
+  element.dispatchEvent(new MouseEvent("mouseout", baseOptions));
+  element.dispatchEvent(new MouseEvent("mouseleave", { ...baseOptions, bubbles: false }));
+}
+
+function closeCleanSearchRightPopoversForNormalMode() {
+  const rightEntry = document.querySelector(".bili-focus-clean-search-mode .right-entry");
+  const popovers = getCleanSearchRightPopoverCandidates();
+
+  popovers.forEach(clearCleanSearchPopoverClamp);
+  cleanSearchRightPopoverHoveredItem = null;
+
+  if (rightEntry) {
+    const exitTargets = new Set([rightEntry, ...Array.from(rightEntry.children)]);
+    rightEntry.querySelectorAll(".v-popover-wrap, .right-entry-item, a, button, li").forEach((element) => {
+      exitTargets.add(element);
+    });
+    Array.from(exitTargets).reverse().forEach(dispatchCleanSearchRightNavExitEvents);
+
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLElement && rightEntry.contains(activeElement)) {
+      activeElement.blur();
+    }
+  }
+
+  const refreshNormalLayout = () => {
+    popovers.forEach(clearCleanSearchPopoverClamp);
+    window.dispatchEvent(new Event("resize"));
+  };
+  requestAnimationFrame(refreshNormalLayout);
+  setTimeout(refreshNormalLayout, 80);
+}
+
 function stopCleanSearchRightPopoverClamp() {
   if (cleanSearchRightPopoverObserver) {
     cleanSearchRightPopoverObserver.disconnect();
@@ -2605,6 +2652,9 @@ function updateCleanSearchRightPopoverClamp(shouldRun) {
 
 function applyCleanSearchMode() {
   const active = isCleanSearchActive();
+  if (!active && document.documentElement.classList.contains("bili-focus-clean-search-mode")) {
+    closeCleanSearchRightPopoversForNormalMode();
+  }
   document.documentElement.classList.toggle("bili-focus-clean-search-mode", active);
 
   if (!active) {
