@@ -118,6 +118,163 @@ def manifest_bytes(manifest: dict) -> bytes:
     return (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
+def display_path(path: Path) -> Path:
+    try:
+        return path.relative_to(PROJECT_ROOT)
+    except ValueError:
+        return path
+
+
+def is_regex_context(previous_significant: str) -> bool:
+    return previous_significant == "" or previous_significant in "([{=,:;!&|?+-*~^<>"
+
+
+def strip_js_comments(source: str) -> str:
+    """Remove JS line/block comments without changing source files on disk."""
+    output: list[str] = []
+    index = 0
+    previous_significant = ""
+    state = "code"
+    template_expression_depth = 0
+    brace_stack: list[str] = []
+
+    while index < len(source):
+        char = source[index]
+        next_char = source[index + 1] if index + 1 < len(source) else ""
+
+        if state == "code":
+            if char == "/" and next_char == "/":
+                index += 2
+                while index < len(source) and source[index] not in "\r\n":
+                    index += 1
+                continue
+            if char == "/" and next_char == "*":
+                index += 2
+                while index < len(source) - 1 and not (source[index] == "*" and source[index + 1] == "/"):
+                    if source[index] in "\r\n":
+                        output.append(source[index])
+                    index += 1
+                index = min(index + 2, len(source))
+                continue
+            if char == "'" or char == '"':
+                state = char
+                output.append(char)
+                index += 1
+                continue
+            if char == "`":
+                state = "template"
+                output.append(char)
+                index += 1
+                continue
+            if char == "/" and is_regex_context(previous_significant):
+                state = "regex"
+                output.append(char)
+                index += 1
+                continue
+            if template_expression_depth and char == "{":
+                template_expression_depth += 1
+            elif template_expression_depth and char == "}":
+                template_expression_depth -= 1
+                output.append(char)
+                if template_expression_depth == 0 and brace_stack and brace_stack[-1] == "template":
+                    brace_stack.pop()
+                    state = "template"
+                previous_significant = "}"
+                index += 1
+                continue
+            if not char.isspace():
+                previous_significant = char
+            output.append(char)
+            index += 1
+            continue
+
+        if state == "'" or state == '"':
+            output.append(char)
+            if char == "\\":
+                if index + 1 < len(source):
+                    output.append(source[index + 1])
+                    index += 2
+                else:
+                    index += 1
+                continue
+            if char == state:
+                previous_significant = char
+                state = "code"
+            index += 1
+            continue
+
+        if state == "template":
+            output.append(char)
+            if char == "\\":
+                if index + 1 < len(source):
+                    output.append(source[index + 1])
+                    index += 2
+                else:
+                    index += 1
+                continue
+            if char == "`":
+                previous_significant = char
+                state = "code"
+                index += 1
+                continue
+            if char == "$" and next_char == "{":
+                output.append(next_char)
+                brace_stack.append("template")
+                template_expression_depth = 1
+                state = "code"
+                previous_significant = "{"
+                index += 2
+                continue
+            index += 1
+            continue
+
+        if state == "regex":
+            output.append(char)
+            if char == "\\":
+                if index + 1 < len(source):
+                    output.append(source[index + 1])
+                    index += 2
+                else:
+                    index += 1
+                continue
+            if char == "[":
+                state = "regex_class"
+                index += 1
+                continue
+            if char == "/":
+                index += 1
+                while index < len(source) and (source[index].isalpha() or source[index].isdigit()):
+                    output.append(source[index])
+                    index += 1
+                previous_significant = "/"
+                state = "code"
+                continue
+            index += 1
+            continue
+
+        if state == "regex_class":
+            output.append(char)
+            if char == "\\":
+                if index + 1 < len(source):
+                    output.append(source[index + 1])
+                    index += 2
+                else:
+                    index += 1
+                continue
+            if char == "]":
+                state = "regex"
+            index += 1
+            continue
+
+    return "".join(output)
+
+
+def file_bytes_for_bundle(source_path: Path) -> bytes:
+    if source_path.suffix == ".js":
+        return strip_js_comments(source_path.read_text(encoding="utf-8")).encode("utf-8")
+    return source_path.read_bytes()
+
+
 def write_bundle(
     extension_dir: Path,
     output_path: Path,
@@ -146,7 +303,7 @@ def write_bundle(
                 relative_path = source_path.relative_to(extension_dir)
                 if relative_path.as_posix() == "manifest.json":
                     continue
-                archive.write(source_path, relative_path.as_posix())
+                archive.writestr(relative_path.as_posix(), file_bytes_for_bundle(source_path))
 
         os.replace(temp_path, output_path)
     except Exception:
@@ -168,8 +325,8 @@ def main() -> int:
     write_bundle(extension_dir, chrome_edge_bundle, manifest)
     write_bundle(extension_dir, firefox_bundle, firefox_manifest(manifest))
 
-    print(f"Built {chrome_edge_bundle.relative_to(PROJECT_ROOT)}")
-    print(f"Built {firefox_bundle.relative_to(PROJECT_ROOT)}")
+    print(f"Built {display_path(chrome_edge_bundle)}")
+    print(f"Built {display_path(firefox_bundle)}")
     return 0
 
 
