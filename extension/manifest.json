@@ -11,7 +11,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.bilibili.com/*"],
-      "js": ["content.js"],
+      "js": ["content/clean-search.js", "content/main.js"],
       "run_at": "document_start"
     }
   ],
