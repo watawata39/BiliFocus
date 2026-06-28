@@ -1,5 +1,13 @@
 [
   {
+    "date": "2026-06-28",
+    "version": "2.1.2",
+    "changes": [
+      "修改了广告卡隐藏逻辑，修复了一些无法隐藏/闪动问题",
+      "此版本不打算官方发布"
+    ]
+  },
+  {
     "date": "2026-06-27",
     "version": "2.1.1",
     "changes": [
@@ -25,7 +33,7 @@
     ]
   },
   {
-    "date": "2026-02-21",
+    "date": ["2026-02-21", 3],
     "version": "2.0.0",
     "changes": [
       "添加了Microsoft Edge与Firefox的支持（在此之前仅支持Chrome）",
@@ -34,37 +42,34 @@
     ]
   },
   {
-    "date": "2026-02-20",
+    "date": ["2026-02-21", 2],
     "version": "1.7.7",
     "changes": [
       "删除了所有的console.log（无论注释与否）"
-    ],
-    "_comment": "This is made in 2026-02-21 1am also, but I don't want repeated dates."
+    ]
   },
   {
-    "date": "2026-02-19",
+    "date": ["2026-02-21", 1],
     "version": "1.7.6",
     "changes": [
       "修复了bangumi页面载入时左上导航栏元素闪动",
       "修改了隐藏‘首页’按钮下拉菜单的逻辑，从而修复了相关问题"
-    ],
-    "_comment": "This is actually made in 2026-02-21 1am, but whatever."
+    ]
   },
   {
-    "date": "2026-02-15",
+    "date": ["2026-02-15", 2],
     "version": "1.7.5",
     "changes": [
       "修复了视频播放页面加载时投稿图标闪动问题"
     ]
   },
   {
-    "date": "2026-02-14",
+    "date": ["2026-02-15", 1],
     "version": "1.7.4",
     "changes": [
       "成功修复了隐藏搜索推荐时可能无法选择搜索框的问题",
       "修复了隐藏左上导航栏时出现的闪动问题"
-    ],
-    "_comment": "This is actually made in 2026-02-15, but I don't want repeated dates."
+    ]
   },
   {
     "date": "2026-01-14",
@@ -76,25 +81,24 @@
     ]
   },
   {
-    "date": "2025-12-24",
+    "date": ["2025-12-24", 2],
     "version": "1.7.2",
     "changes": [
       "修复了`/`快捷键在搜索结果页无法选择已存在内容的问题"
     ]
   },
   {
-    "date": "2025-12-23",
+    "date": ["2025-12-24", 1],
     "version": "1.7.1",
     "changes": [
       "修改搜索推荐屏蔽，在动态页面显示正在直播，彻底隐藏右侧热搜栏"
-    ],
-    "_comment": "This is actually made in 2025-12-24, but I don't want repeated dates."
+    ]
   },
   {
     "date": "2025-12-22",
     "version": "1.7.0",
     "changes": [
-      "添加了按/键聚焦搜索栏的可选功能",
+      "添加了按`/`键聚焦搜索栏的可选功能",
       "添加了直播页隐藏左上导航栏的功能"
     ]
   },

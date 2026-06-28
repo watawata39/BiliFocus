@@ -22,19 +22,6 @@ function removeGlobalStyle(id = "bili-focus-style") {
   }
 }
 
-function remove_by_element(target, remove = true) {
-  // remove = true -> remove element
-  // remove = false -> display element
-  if (remove) {
-    target.style.visibility = "hidden";
-    target.style.pointerEvents = "none";
-  } else {
-    target.style.visibility = "visible";
-    target.style.pointerEvents = "auto";
-  }
-}
-
-
 // searchrecom: store original placeholder/title for restore when option is turned off
 var original_placeholder = '', original_title = '';
 var searchrecomObserver = null; // one-shot observer to clear search inputs when they appear
@@ -68,31 +55,6 @@ function clearSearchInputSuggestions() {
     }
   });
   searchrecomObserver.observe(document.body, { childList: true, subtree: true });
-}
-
-rafmr_lastRunTime = 0;
-RAFMR_MINDELAY = 100;
-function remove_ads_from_mainpagerecom(remove = true) {
-  const currentTime = Date.now();
-  if (currentTime - rafmr_lastRunTime < RAFMR_MINDELAY) return;
-  rafmr_lastRunTime = currentTime;
-  if (!shouldHideSetting("homepagerecom") || window.location.href.includes("search.bilibili.com")) {
-    const ad_icons = document.querySelectorAll(".bili-video-card__info--ad"); // the old version, but still needed for the ads on search.bilibili.com
-    ad_icons.forEach((element) => {
-      remove_by_element(element.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement, remove);
-    });
-    const ad_images = document.querySelectorAll('img[src*="bfs/sycp/sanlian/image"]');  // for the new version ads on the main page
-    ad_images.forEach((element) => {
-      remove_by_element(element.closest('.bili-feed-card'), remove);
-    });
-    // This cannot select the mini-program ads
-    // const ad_cards = Array.from(  // for the new web version; .vui_icon is the rocket icon of 创意推广, which is not to be included in the array
-    //   document.querySelectorAll('a.bili-video-card__image--link[href^="//cm.bilibili.com"][href*="ad_card"]')
-    // ).filter(link => !link.querySelector('.vui_icon'));
-    // ad_cards.forEach((element) => {
-    //   remove_by_element(element.closest('.bili-feed-card'), remove);
-    // });
-  }
 }
 
 function getCookieValue(cookieName) {
@@ -171,14 +133,20 @@ const settings = { // these are the defaults, initialise to all true
   cleansearchmode: true,
 };
 const personal_page_prefrences = ["myvideos","myfavourites","subanimes","recentcoins","recentlikes","collections","columns","usrpageleftsidebar"];
+// In this table, "styles" selectors are hidden with visibility/pointer-events/display:none.
+// "styles2" selectors are hidden with visibility/pointer-events only.
 const modifications = {
+  // CSS only for the homepage recommendation layout itself.
   homepagerecom: [
     ["styles", ".bili-feed4-layout,.bili-header__channel,.header-channel,.palette-button-wrap,.bili-footer,"],],
+  // CSS hides the recommendation surfaces. addVidrecomObserver() does not hide extra nodes; it re-enables cancel/countdown controls inside Bilibili's ending panel when autoplay is on.
   vidrecom: [
     ["styles", ".recommend-list-v1,.pop-live-small-mode,div[class^='recommend_wrap'],"],
     ["styles2", ".bpx-player-ending-related,"],],
+  // CSS only.
   comments: [
     ["styles", `#commentapp,iframe[name="DMdl"],#comment-module,.bili-dyn-item__footer > :nth-child(2),`],],
+  // CSS covers known static structures. clean_navigation_bar() also hides later-rendered left-entry/nav-link-ul children inline, and the bottom observer hides the first 首页 dropdown (.is-bottom-start).
   leftnavi: [
     ["styles2", ".left-entry > li:first-child > a:first-child > div:nth-child(2),.left-entry > :nth-child(2),.left-entry > :nth-child(3),.left-entry > :nth-child(4),.left-entry > :nth-child(5),.left-entry > :nth-child(6),.left-entry > :nth-child(7),.left-entry > :nth-child(8),.left-entry > :nth-child(9),.left-entry > :nth-child(10),.left-entry > :nth-child(11),.left-entry > :nth-child(12),"], // this style2 is to immediately hide the fixed parts of the leftnavi to eliminate the flash effect
     ["styles2", ".nav-link-ul.mini > :nth-child(3),.nav-link-ul.mini > :nth-child(4),.nav-link-ul.mini > :nth-child(5),.nav-link-ul.mini > :nth-child(6),.nav-link-ul.mini > :nth-child(7),.nav-link-ul.mini > :nth-child(8),.nav-link-ul.mini > :nth-child(9),.nav-link-ul.mini > :nth-child(10),.nav-link-ul.mini > :nth-child(11),.nav-link-ul.mini > :nth-child(12),"],
@@ -186,53 +154,71 @@ const modifications = {
     ["styles2", "#prehold-nav-vm > div > div:nth-of-type(n+3):nth-of-type(-n+16),"],  // elements that flash by when https://live.bilibili.com/ is loaded
     ["styles2", "#left-part > div > div > div.flex-block > div,#left-part > div > div > div.flex-block > div > div > div.dp-table-cell.v-middle,#left-part > div > div > div.showmore-link.p-relative.f-left,"], // streaming page
   ],
+  // CSS hides recommendation/trending panels. clearSearchInputSuggestions() also clears search input placeholder/title via JS, and hideElements() adds placeholder CSS to prevent text flash.
   searchrecom: [
     ["styles", ".trending,.bili-dyn-topic-box,.topic-panel,.channel-menu-mini,.bili-dyn-search-trendings,"],
   ],
+  // CSS only in normal mode. Clean Search has separate right-navigation display rules in clean-search.js.
   membership: [
     ["styles2", 'div.vip-wrap,'],
   ],
+  // CSS only in normal mode. Clean Search has separate right-navigation display rules in clean-search.js.
   messages: [
     ["styles2", '.right-entry > :nth-child(3),'],
   ],
+  // CSS only in normal mode. Clean Search has separate right-navigation display rules in clean-search.js.
   dongtai: [
     ["styles2", '.right-entry > :nth-child(4),'],
   ],
+  // CSS only in normal mode. Clean Search has separate right-navigation display rules in clean-search.js.
   favourites: [
     ["styles2", '.right-entry > :nth-child(5),'],
   ],
+  // CSS only in normal mode. Clean Search has separate right-navigation display rules in clean-search.js.
   history: [
     ["styles2", '.right-entry > :nth-child(6),'],
   ],
+  // CSS only in normal mode. Clean Search has separate right-navigation display rules in clean-search.js.
   tougao: [
     ["styles2", '.right-entry > :nth-child(7),'], // 创意中心 icon
     ["styles2", '.right-entry > :nth-child(8),.right-entry .header-upload-entry,'], // 投稿 icon, the second is for the icon that flashes on load in video streaming page
   ],
+  // CSS only. Common ad containers use direct selectors; main/search ad cards use :has() to detect inner ad markers.
   ads: [
-    ["styles", "#slide_ad,.ad-report,.video-card-ad-small,.adcard-content,.bili-dyn-ads,.head-title,.ad-img,.adcard,div.section.game,"],],
+    ["styles", "#slide_ad,.ad-report,.video-card-ad-small,.adcard-content,.bili-dyn-ads,.head-title,.ad-img,.adcard,div.section.game,div.video-page-game-card-small,"],  // other ad containers
+    ["styles2", ".bili-feed-card:has(a.bili-video-card__image--link[href*=\"ad_card\"]),.bili-video-card:has(.bili-video-card__stats--ad),"],],  // ad video cards on main page and search page respectively. The former does not distinguish between ad and 创意推广
+  // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   myvideos: [
     ["styles", "div.section.i-pin-v,div.section.video,"], // for legacy UI
     ["styles", "#app > main > div.space-home > div.content > :nth-child(1),#app > main > div.space-home > div.content > :nth-child(2),"],],
+  // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   myfavourites: [
     ["styles", "div.section.fav,"], // for legacy UI
     ["styles", "#app > main > div.space-home > div.content > :nth-child(3),"],],
+  // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   subanimes: [
     ["styles", "div.section.bangumi,"], // for legacy UI
     ["styles", "#app > main > div.space-home > div.content > :nth-child(4),"],],
+  // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   recentcoins: [
     ["styles", "div.col-1 > :nth-child(5),"], // for legacy UI
     ["styles", "#app > main > div.space-home > div.content > :nth-child(5),"],],
+  // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   collections: [
     ["styles", "div.section.channel,"], // for legacy UI
     ["styles", "#app > main > div.space-home > div.content > :nth-child(6),"],],
+  // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   columns: [
     ["styles", "div.section.article,"], // for legacy UI
     ["styles", "#app > main > div.space-home > div.content > :nth-child(7),"],],
+  // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   recentlikes: [
     ["styles", "div.col-1 > :nth-child(8),"], // for legacy UI
     ["styles", "#app > main > div.space-home > div.content > :nth-child(8),"],],
+  // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   usrpageleftsidebar: [ // last 1 is legacy
     ["styles", "div.aside,div.col-2,"]],
+  // No selectors here. applyCleanSearchMode() in clean-search.js injects the Clean Search layout, and shouldHideSetting() locks homepagerecom/searchrecom/ads/leftnavi while it is active on the main page.
   cleansearchmode: [],
 };
 
@@ -347,12 +333,6 @@ function initialLogicBody() {
           ) {
           runMainCode();
         }
-        if (mutation.target.classList.contains("bili-video-card__image--wrap")) {
-          // Clean ads from main page recommendations
-          if (shouldHideSetting("ads")) {
-            remove_ads_from_mainpagerecom();
-          }
-        }
       });
     });
     window.runLogicObserver.observe(document.body, { childList: true, subtree: true });
@@ -371,7 +351,6 @@ function initialLogicBody() {
 
     // And just run once anyways
     runMainCode();
-    if (shouldHideSetting("ads")) { remove_ads_from_mainpagerecom();}
   });
 }
 
@@ -392,17 +371,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.value == true) {     // if the user turned the option on
       if (request.field == "vidrecom") {
         addVidrecomObserver(true);
-      } else
-      if (request.field == "ads") {
-        remove_ads_from_mainpagerecom();
       }
     } else {                         // if the user turned the option off
       if (request.field == "leftnavi") {
         clean_navigation_bar(false);
       } else 
-      if (request.field == "homepagerecom") {
-        remove_ads_from_mainpagerecom();
-      } else
       if (request.field == "searchrecom") {
         if (searchrecomObserver) {
           searchrecomObserver.disconnect();
@@ -416,9 +389,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           if (title !== '') el.setAttribute("title", title);
           else el.removeAttribute("title");
         });
-      } else 
-      if (request.field == "ads") {
-        remove_ads_from_mainpagerecom(false);
       }
     }
     
