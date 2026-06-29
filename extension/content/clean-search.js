@@ -11,6 +11,50 @@ const CLEAN_SEARCH_RIGHT_NAV_SELECTORS = {
   history: ".bili-focus-clean-search-mode .right-entry > :nth-child(6)",
   tougao: ".bili-focus-clean-search-mode .right-entry > :nth-child(7),.bili-focus-clean-search-mode .right-entry > :nth-child(8),.bili-focus-clean-search-mode .right-entry .header-upload-entry",
 };
+const CLEAN_SEARCH_RIGHT_NAV_LAYOUT_ITEMS = [
+  {
+    key: "membership",
+    setting: "membership",
+    childIndex: 2,
+    dropdownSelector: ".right-entry > :nth-child(2) > .v-popover-wrap > .v-popover:not(.v-popover-wrap)",
+  },
+  {
+    key: "messages",
+    setting: "messages",
+    childIndex: 3,
+    dropdownSelector: ".right-entry > :nth-child(3) > .v-popover:not(.v-popover-wrap)",
+  },
+  {
+    key: "dongtai",
+    setting: "dongtai",
+    childIndex: 4,
+    dropdownSelector: ".right-entry > :nth-child(4) > .v-popover:not(.v-popover-wrap)",
+  },
+  {
+    key: "favourites",
+    setting: "favourites",
+    childIndex: 5,
+    dropdownSelector: ".right-entry > :nth-child(5) > .v-popover:not(.v-popover-wrap)",
+  },
+  {
+    key: "history",
+    setting: "history",
+    childIndex: 6,
+    dropdownSelector: ".right-entry > :nth-child(6) > .v-popover:not(.v-popover-wrap)",
+  },
+  {
+    key: "creator",
+    setting: "tougao",
+    childIndex: 7,
+  },
+  {
+    key: "upload",
+    setting: "tougao",
+    childIndex: 8,
+    dropdownSelector: ".right-entry > :nth-child(8) > .v-popover-wrap > .v-popover:not(.v-popover-wrap)",
+  },
+];
+const CLEAN_SEARCH_RIGHT_POPOVER_CACHE_ITEMS = CLEAN_SEARCH_RIGHT_NAV_LAYOUT_ITEMS.filter((item) => item.dropdownSelector);
 const CLEAN_SEARCH_BADGE_MESSAGES = {
   zh: "清爽搜索",
   en: "Clean Search",
@@ -147,6 +191,9 @@ const CLEAN_SEARCH_BUILT_IN_FOREGROUNDS = {
   },
 };
 const CLEAN_SEARCH_BACKGROUND_STORAGE_KEYS = ["cleansearchbackground", "cleansearchuploadedwallpaper", "cleansearchcustomcolor", "cleansearchuploadedforegroundcache"];
+const CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY = "cleansearchrightpopovercache";
+const CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STYLE_ID = "bili-focus-style-cleansearch-popover-cache";
+const CLEAN_SEARCH_RIGHT_POPOVER_CACHE_MAX_ENTRIES = 96;
 const CLEAN_SEARCH_RIGHT_POPOVER_SELECTOR = ".v-popover:not(.v-popover-wrap)";
 let cleanSearchLanguage = "zh";
 let cleanSearchBackgroundState = { ...CLEAN_SEARCH_DEFAULT_BACKGROUND };
@@ -170,6 +217,9 @@ let cleanSearchRightPopoverRaf = 0;
 let cleanSearchRightPopoverListenersActive = false;
 let cleanSearchRightPopoverTimeouts = [];
 let cleanSearchRightPopoverHoveredItem = null;
+let cleanSearchRightPopoverCache = {};
+let cleanSearchRightPopoverCacheWriteTimeout = null;
+let cleanSearchRightPopoverLastLeftSignatures = {};
 
 function isCleanSearchMainPage() {
   return window.location.hostname === "www.bilibili.com" &&
@@ -1057,6 +1107,7 @@ function setCleanSearchBackgroundPanelOpen(open) {
       if (panel.classList.contains("is-closing")) panel.remove();
     }, 260);
   }
+  updateCleanSearchRightPopoverCacheStyle();
   scheduleCleanSearchRightPopoverClampBurst();
 }
 
@@ -1616,6 +1667,14 @@ function getCleanSearchModeStyle() {
       flex: 0 0 auto !important;
     }
 
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li {
+      height: 34px !important;
+      min-height: 34px !important;
+      display: flex !important;
+      align-items: center !important;
+      line-height: 18px !important;
+    }
+
     .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a {
       height: 34px !important;
       min-height: 34px !important;
@@ -1631,6 +1690,7 @@ function getCleanSearchModeStyle() {
     .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > span,
     .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > div {
       color: var(--bili-focus-clean-left-nav-color) !important;
+      min-height: 0 !important;
       line-height: 18px !important;
     }
 
@@ -2303,6 +2363,232 @@ function clearCleanSearchPopoverClamp(element) {
   delete element.dataset.biliFocusRightPopoverShift;
 }
 
+function getCleanSearchSafeCssPixelLength(value) {
+  const normalized = typeof value === "string" ? value.trim() : "";
+  return /^-?\d+(?:\.\d+)?px$/.test(normalized) ? normalized : "0px";
+}
+
+function getCleanSearchClampedMargin(originalMargin, shiftX) {
+  const safeOriginalMargin = getCleanSearchSafeCssPixelLength(originalMargin);
+  const roundedShift = Math.round(Number(shiftX) || 0);
+  const operator = roundedShift < 0 ? "-" : "+";
+  return `calc(${safeOriginalMargin} ${operator} ${Math.abs(roundedShift)}px)`;
+}
+
+function isCleanSearchRightNavLayoutItemVisible(item) {
+  return !item.setting || !settings[item.setting];
+}
+
+function getCleanSearchRightPopoverLeftSignature(itemKey) {
+  const leftItems = [];
+  for (const item of CLEAN_SEARCH_RIGHT_NAV_LAYOUT_ITEMS) {
+    if (item.key === itemKey) break;
+    if (isCleanSearchRightNavLayoutItemVisible(item)) {
+      leftItems.push(item.key);
+    }
+  }
+  return leftItems.join(",");
+}
+
+function getCleanSearchRightPopoverLeftSignatures() {
+  const signatures = {};
+  CLEAN_SEARCH_RIGHT_POPOVER_CACHE_ITEMS.forEach((item) => {
+    signatures[item.key] = getCleanSearchRightPopoverLeftSignature(item.key);
+  });
+  return signatures;
+}
+
+function rememberCleanSearchRightPopoverLeftSignatures() {
+  cleanSearchRightPopoverLastLeftSignatures = getCleanSearchRightPopoverLeftSignatures();
+}
+
+function deleteCleanSearchRightPopoverCacheEntries(itemKey, leftSignature) {
+  let didDelete = false;
+  Object.entries(cleanSearchRightPopoverCache).forEach(([cacheKey, entry]) => {
+    if (entry.itemKey === itemKey && entry.leftSignature === leftSignature) {
+      delete cleanSearchRightPopoverCache[cacheKey];
+      didDelete = true;
+    }
+  });
+  return didDelete;
+}
+
+function invalidateCleanSearchRightPopoverCacheForLayoutChange() {
+  const nextSignatures = getCleanSearchRightPopoverLeftSignatures();
+  let didDelete = false;
+
+  Object.entries(nextSignatures).forEach(([itemKey, nextSignature]) => {
+    const previousSignature = cleanSearchRightPopoverLastLeftSignatures[itemKey];
+    if (previousSignature !== undefined && previousSignature !== nextSignature) {
+      didDelete = deleteCleanSearchRightPopoverCacheEntries(itemKey, previousSignature) || didDelete;
+    }
+  });
+
+  cleanSearchRightPopoverLastLeftSignatures = nextSignatures;
+  if (didDelete) {
+    updateCleanSearchRightPopoverCacheStyle();
+    scheduleCleanSearchRightPopoverCacheWrite();
+  }
+}
+
+function getCleanSearchRightPopoverMaxRight() {
+  const panel = document.getElementById("bili-focus-clean-bg-panel");
+  if (cleanSearchBackgroundPanelOpen) {
+    if (panel) return panel.getBoundingClientRect().left;
+    return window.innerWidth - Math.min(344, window.innerWidth * 0.42);
+  }
+  return window.innerWidth;
+}
+
+function getCleanSearchRightPopoverLayoutKey() {
+  const maxRight = Math.round(getCleanSearchRightPopoverMaxRight());
+  return `w=${Math.round(window.innerWidth)};right=${maxRight}`;
+}
+
+function getCleanSearchRightPopoverCacheKey(item) {
+  return [
+    item.key,
+    `left=${getCleanSearchRightPopoverLeftSignature(item.key)}`,
+    getCleanSearchRightPopoverLayoutKey(),
+  ].join("|");
+}
+
+function getCleanSearchRightPopoverItemDefinition(element) {
+  const rightEntry = document.querySelector(".bili-focus-clean-search-mode .right-entry");
+  if (!rightEntry || !(element instanceof Element)) return null;
+  const child = element.closest(".right-entry > *");
+  if (!child || child.parentElement !== rightEntry) return null;
+  const childIndex = Array.prototype.indexOf.call(rightEntry.children, child) + 1;
+  return CLEAN_SEARCH_RIGHT_POPOVER_CACHE_ITEMS.find((item) => item.childIndex === childIndex) || null;
+}
+
+function normalizeCleanSearchRightPopoverCache(value) {
+  const normalized = {};
+  if (!value || typeof value !== "object") return normalized;
+
+  Object.entries(value).forEach(([cacheKey, entry]) => {
+    if (!entry || typeof entry !== "object") return;
+    const item = CLEAN_SEARCH_RIGHT_POPOVER_CACHE_ITEMS.find((candidate) => candidate.key === entry.itemKey);
+    const shiftX = Math.round(Number(entry.shiftX));
+    if (!item || !Number.isFinite(shiftX) || shiftX === 0) return;
+    normalized[cacheKey] = {
+      itemKey: item.key,
+      selector: item.dropdownSelector,
+      leftSignature: typeof entry.leftSignature === "string" ? entry.leftSignature : "",
+      layoutKey: typeof entry.layoutKey === "string" ? entry.layoutKey : "",
+      originalMargin: getCleanSearchSafeCssPixelLength(entry.originalMargin),
+      shiftX,
+      updatedAt: Number(entry.updatedAt) || 0,
+    };
+  });
+
+  return normalized;
+}
+
+function loadCleanSearchRightPopoverCache(result) {
+  cleanSearchRightPopoverCache = normalizeCleanSearchRightPopoverCache(result && result[CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY]);
+  rememberCleanSearchRightPopoverLeftSignatures();
+  updateCleanSearchRightPopoverCacheStyle();
+}
+
+function pruneCleanSearchRightPopoverCache() {
+  const entries = Object.entries(cleanSearchRightPopoverCache);
+  if (entries.length <= CLEAN_SEARCH_RIGHT_POPOVER_CACHE_MAX_ENTRIES) return;
+
+  entries
+    .sort(([, first], [, second]) => (Number(first.updatedAt) || 0) - (Number(second.updatedAt) || 0))
+    .slice(0, entries.length - CLEAN_SEARCH_RIGHT_POPOVER_CACHE_MAX_ENTRIES)
+    .forEach(([cacheKey]) => {
+      delete cleanSearchRightPopoverCache[cacheKey];
+    });
+}
+
+function scheduleCleanSearchRightPopoverCacheWrite() {
+  if (cleanSearchRightPopoverCacheWriteTimeout) {
+    clearTimeout(cleanSearchRightPopoverCacheWriteTimeout);
+  }
+  cleanSearchRightPopoverCacheWriteTimeout = setTimeout(() => {
+    cleanSearchRightPopoverCacheWriteTimeout = null;
+    chrome.storage.local.set({ [CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY]: cleanSearchRightPopoverCache });
+  }, 250);
+}
+
+function getCleanSearchRightPopoverCacheStyle() {
+  if (!isCleanSearchActive() || !isCleanSearchRightNavLeftAligned()) return "";
+  const rules = [];
+
+  CLEAN_SEARCH_RIGHT_POPOVER_CACHE_ITEMS.forEach((item) => {
+    if (!isCleanSearchRightNavLayoutItemVisible(item)) return;
+    const cacheKey = getCleanSearchRightPopoverCacheKey(item);
+    const entry = cleanSearchRightPopoverCache[cacheKey];
+    if (!entry || entry.shiftX === 0) return;
+    rules.push(`
+      .bili-focus-clean-search-mode.bili-focus-clean-right-nav-left ${item.dropdownSelector} {
+        margin-left: ${getCleanSearchClampedMargin(entry.originalMargin, entry.shiftX)} !important;
+      }
+    `);
+  });
+
+  return rules.join("\n");
+}
+
+function updateCleanSearchRightPopoverCacheStyle() {
+  if (typeof addGlobalStyle !== "function") return;
+  addGlobalStyle(getCleanSearchRightPopoverCacheStyle(), CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STYLE_ID);
+}
+
+function setCleanSearchRightPopoverCacheEntry(item, shiftX, originalMargin) {
+  if (!isCleanSearchActive() || !isCleanSearchRightNavLeftAligned() || !item || !item.dropdownSelector) return;
+  const roundedShift = Math.round(Number(shiftX) || 0);
+  if (roundedShift === 0) return;
+
+  const leftSignature = getCleanSearchRightPopoverLeftSignature(item.key);
+  const layoutKey = getCleanSearchRightPopoverLayoutKey();
+  const cacheKey = getCleanSearchRightPopoverCacheKey(item);
+  const nextEntry = {
+    itemKey: item.key,
+    selector: item.dropdownSelector,
+    leftSignature,
+    layoutKey,
+    originalMargin: getCleanSearchSafeCssPixelLength(originalMargin),
+    shiftX: roundedShift,
+    updatedAt: Date.now(),
+  };
+  const previousEntry = cleanSearchRightPopoverCache[cacheKey];
+  if (
+    previousEntry &&
+    previousEntry.shiftX === nextEntry.shiftX &&
+    previousEntry.originalMargin === nextEntry.originalMargin &&
+    previousEntry.leftSignature === nextEntry.leftSignature &&
+    previousEntry.layoutKey === nextEntry.layoutKey
+  ) {
+    return;
+  }
+
+  cleanSearchRightPopoverCache[cacheKey] = nextEntry;
+  pruneCleanSearchRightPopoverCache();
+  updateCleanSearchRightPopoverCacheStyle();
+  scheduleCleanSearchRightPopoverCacheWrite();
+}
+
+function clearCleanSearchRightPopoverCacheEntry(item) {
+  if (!item) return;
+  const cacheKey = getCleanSearchRightPopoverCacheKey(item);
+  if (!cleanSearchRightPopoverCache[cacheKey]) return;
+  delete cleanSearchRightPopoverCache[cacheKey];
+  updateCleanSearchRightPopoverCacheStyle();
+  scheduleCleanSearchRightPopoverCacheWrite();
+}
+
+function getCleanSearchRightPopoverAppliedCache(element) {
+  if (!isCleanSearchActive() || !isCleanSearchRightNavLeftAligned()) return null;
+  const item = getCleanSearchRightPopoverItemDefinition(element);
+  if (!item) return null;
+  const cacheKey = getCleanSearchRightPopoverCacheKey(item);
+  const entry = cleanSearchRightPopoverCache[cacheKey];
+  return entry ? { item, entry } : { item, entry: null };
+}
+
 function isVisibleCleanSearchPopover(element) {
   if (!element || element.closest(".center-search-container")) return false;
 
@@ -2341,9 +2627,8 @@ function getCleanSearchRightPopoverCandidates() {
 function clampCleanSearchRightPopovers() {
   if (!isCleanSearchActive()) return;
 
-  const panel = document.getElementById("bili-focus-clean-bg-panel");
   const minLeft = 0;
-  const maxRight = cleanSearchBackgroundPanelOpen && panel ? panel.getBoundingClientRect().left : window.innerWidth;
+  const maxRight = getCleanSearchRightPopoverMaxRight();
   getCleanSearchRightPopoverCandidates().forEach((element) => {
     if (!isVisibleCleanSearchPopover(element)) {
       if (element.dataset.biliFocusRightPopoverClamped === "true") {
@@ -2352,6 +2637,7 @@ function clampCleanSearchRightPopovers() {
       return;
     }
 
+    const cacheInfo = getCleanSearchRightPopoverAppliedCache(element);
     const currentMarginLeft = element.style.getPropertyValue("margin-left");
     const clampStillApplied = element.dataset.biliFocusAppliedMarginLeft === currentMarginLeft;
     const wasClamped = element.dataset.biliFocusRightPopoverClamped === "true";
@@ -2375,7 +2661,8 @@ function clampCleanSearchRightPopovers() {
       delete element.dataset.biliFocusAppliedMarginLeft;
       delete element.dataset.biliFocusRightPopoverShift;
     }
-    const currentShiftX = clampStillApplied ? Number(element.dataset.biliFocusRightPopoverShift || 0) : 0;
+    const cachedShiftX = cacheInfo && cacheInfo.entry ? Number(cacheInfo.entry.shiftX || 0) : 0;
+    const currentShiftX = clampStillApplied ? Number(element.dataset.biliFocusRightPopoverShift || 0) : cachedShiftX;
     const rect = element.getBoundingClientRect();
     const baseLeft = rect.left - currentShiftX;
     const baseRight = rect.right - currentShiftX;
@@ -2390,20 +2677,31 @@ function clampCleanSearchRightPopovers() {
 
     if (shiftX === currentShiftX) return;
     if (shiftX === 0) {
+      if (cacheInfo && cacheInfo.entry) {
+        clearCleanSearchRightPopoverCacheEntry(cacheInfo.item);
+      }
       if (wasClamped && clampStillApplied) {
         clearCleanSearchPopoverClamp(element);
       }
       return;
     }
 
+    const rawOriginalMargin = clampStillApplied
+      ? element.dataset.biliFocusOriginalMarginLeft || "0px"
+      : element.style.getPropertyValue("margin-left") || "";
+    const originalMargin = cacheInfo && cacheInfo.entry
+      ? cacheInfo.entry.originalMargin
+      : rawOriginalMargin || "0px";
+    if (cacheInfo && cacheInfo.item) {
+      setCleanSearchRightPopoverCacheEntry(cacheInfo.item, shiftX, originalMargin);
+    }
     if (element.dataset.biliFocusRightPopoverClamped !== "true") {
-      element.dataset.biliFocusOriginalMarginLeft = element.style.getPropertyValue("margin-left") || "";
+      element.dataset.biliFocusOriginalMarginLeft = rawOriginalMargin;
       element.dataset.biliFocusOriginalMarginLeftPriority = element.style.getPropertyPriority("margin-left") || "";
       element.dataset.biliFocusOriginalTransition = element.style.getPropertyValue("transition") || "";
       element.dataset.biliFocusOriginalTransitionPriority = element.style.getPropertyPriority("transition") || "";
     }
-    const originalMargin = element.dataset.biliFocusOriginalMarginLeft || "0px";
-    const clampedMargin = `calc(${originalMargin} + ${shiftX}px)`;
+    const clampedMargin = getCleanSearchClampedMargin(originalMargin, shiftX);
     element.style.setProperty("transition", "none", "important");
     element.style.setProperty("margin-left", clampedMargin, "important");
     element.dataset.biliFocusAppliedMarginLeft = clampedMargin;
@@ -2423,6 +2721,7 @@ function scheduleCleanSearchRightPopoverClamp() {
 }
 
 function scheduleCleanSearchRightPopoverClampBurst() {
+  updateCleanSearchRightPopoverCacheStyle();
   scheduleCleanSearchRightPopoverClamp();
   cleanSearchRightPopoverTimeouts.forEach(clearTimeout);
   cleanSearchRightPopoverTimeouts = [];
@@ -2515,6 +2814,7 @@ function stopCleanSearchRightPopoverClamp() {
   }
 
   document.querySelectorAll("[data-bili-focus-right-popover-clamped]").forEach(clearCleanSearchPopoverClamp);
+  updateCleanSearchRightPopoverCacheStyle();
 }
 
 function updateCleanSearchRightPopoverClamp(shouldRun) {
@@ -2565,6 +2865,7 @@ function applyCleanSearchMode() {
     updateCleanSearchBrand(false);
     updateCleanSearchRightPopoverClamp(false);
     removeGlobalStyle("bili-focus-style-cleansearch");
+    removeGlobalStyle(CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STYLE_ID);
     clearCleanSearchForegroundAttributes();
     return;
   }
@@ -2575,6 +2876,7 @@ function applyCleanSearchMode() {
   updateCleanSearchBackgroundLayer(true);
   updateCleanSearchBackgroundButton(true);
   updateCleanSearchBrand(true);
+  updateCleanSearchRightPopoverCacheStyle();
   updateCleanSearchRightPopoverClamp(true);
   if (cleanSearchBackgroundPanelOpen) renderCleanSearchBackgroundPanel();
 }

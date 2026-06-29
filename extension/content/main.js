@@ -308,11 +308,12 @@ let is_first_personal_page_check = true;
 let lastHideElementsTime = 0; // limit the number of calls of hideElements
 const HIDE_ELEMENTS_MIN_DELAY = 50;
 function initialLogicBody() {
-  chrome.storage.local.get([...Object.keys(settings), "language", ...CLEAN_SEARCH_BACKGROUND_STORAGE_KEYS], function(result) {
+  chrome.storage.local.get([...Object.keys(settings), "language", ...CLEAN_SEARCH_BACKGROUND_STORAGE_KEYS, CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY], function(result) {
     Object.keys(settings).forEach(key => {
       settings[key] = result[key] !== undefined ? result[key] : settings[key];
     });
     loadCleanSearchBackgroundSettings(result);
+    loadCleanSearchRightPopoverCache(result);
     updateCleanSearchLanguage(result.language);
     // Execute code after retrieving data
     function runMainCode(check = true) {
@@ -376,12 +377,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     settings[request.field] = request.value;
 
-    if (
-      right_navi_preferences.includes(request.field) &&
-      isCleanSearchActive() &&
-      typeof closeCleanSearchRightPopoversForNormalMode === "function"
-    ) {
-      closeCleanSearchRightPopoversForNormalMode();
+    if (right_navi_preferences.includes(request.field)) {
+      if (typeof invalidateCleanSearchRightPopoverCacheForLayoutChange === "function") {
+        invalidateCleanSearchRightPopoverCacheForLayoutChange();
+      }
+      if (
+        isCleanSearchActive() &&
+        typeof closeCleanSearchRightPopoversForNormalMode === "function"
+      ) {
+        closeCleanSearchRightPopoversForNormalMode();
+        if (typeof updateCleanSearchRightPopoverCacheStyle === "function") {
+          updateCleanSearchRightPopoverCacheStyle();
+        }
+      }
     }
     
     if (request.value == true) {     // if the user turned the option on
@@ -432,11 +440,12 @@ if (document.readyState === "loading") {
 } else {
   initialLogicBody();
 }
-chrome.storage.local.get([...Object.keys(settings), "language", ...CLEAN_SEARCH_BACKGROUND_STORAGE_KEYS], function(result) {
+chrome.storage.local.get([...Object.keys(settings), "language", ...CLEAN_SEARCH_BACKGROUND_STORAGE_KEYS, CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY], function(result) {
   Object.keys(settings).forEach(key => {
     settings[key] = result[key] !== undefined ? result[key] : settings[key];
   });
   loadCleanSearchBackgroundSettings(result);
+  loadCleanSearchRightPopoverCache(result);
   updateCleanSearchLanguage(result.language);
   hideElements(true);
 });
@@ -458,6 +467,9 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
   if (area === 'local' && CLEAN_SEARCH_BACKGROUND_STORAGE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(changes, key))) {
     updateCleanSearchBackgroundSettingsFromChanges(changes);
+  }
+  if (area === 'local' && Object.prototype.hasOwnProperty.call(changes, CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY)) {
+    loadCleanSearchRightPopoverCache({ [CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY]: changes[CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY].newValue });
   }
 });
 

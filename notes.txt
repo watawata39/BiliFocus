@@ -7,4 +7,4 @@ Bilibili plays its own fade/drop intro animation when those panels appear; hidin
 
 Current compromise:
 - Do not attempt to solve the initial opening flash for now.
-- Keep the version 2.1.0 clamp timing so Bilibili's native dropdown animation stays intact.
+- Introduce cache system so the flash is only seen for the first time
