@@ -51,8 +51,6 @@ Personal Homepage
   19. Recent Likes
   20. Left Sidebar
 
-* BiliFocus is designed for Bilibili's current/new UI.
-
 ⸻
 
 Notes:

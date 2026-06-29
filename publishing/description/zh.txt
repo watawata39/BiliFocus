@@ -51,8 +51,6 @@ https://github.com/watawata39/BiliFocus
   19. 最近点赞的视频
   20. 左侧边栏
 
-* BiliFocus 主要适配b站当前新版界面。
-
 ⸻
 
 备注：
