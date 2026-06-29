@@ -134,6 +134,7 @@ const settings = { // these are the defaults, initialise to all true
   cleansearchrightnavleft: true,
 };
 const personal_page_prefrences = ["myvideos","myfavourites","subanimes","recentcoins","recentlikes","collections","columns","usrpageleftsidebar"];
+const right_navi_preferences = ["membership", "messages", "dongtai", "favourites", "history", "tougao"];
 // In this table, "styles" selectors are hidden with visibility/pointer-events/display:none.
 // "styles2" selectors are hidden with visibility/pointer-events only.
 const modifications = {
@@ -374,6 +375,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     
     settings[request.field] = request.value;
+
+    if (
+      right_navi_preferences.includes(request.field) &&
+      isCleanSearchActive() &&
+      typeof closeCleanSearchRightPopoversForNormalMode === "function"
+    ) {
+      closeCleanSearchRightPopoversForNormalMode();
+    }
     
     if (request.value == true) {     // if the user turned the option on
       if (request.field == "vidrecom") {
