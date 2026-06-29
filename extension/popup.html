@@ -378,6 +378,7 @@
       #settings-overlay .modal-content {
         width: 310px;
         min-height: 200px;
+        user-select: none;
       }
 
       #modal-close-btn {
@@ -466,6 +467,30 @@
         margin-bottom: 6px;
       }
 
+      #clean-search-settings-title {
+        font-weight: bold;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+
+      #clean-search-settings-options {
+        text-align: left;
+        margin-top: 8px;
+      }
+
+      #clean-search-settings-options label {
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      .settings-note {
+        margin: 2px 0 0 26px;
+        color: var(--feedback-color);
+        font-size: 12px;
+        line-height: 1.35;
+        text-align: left;
+      }
+
       #behavior-title {
         font-weight: bold;
         margin-bottom: 12px;
@@ -534,6 +559,15 @@
             <input type="radio" name="language" value="ja">
             日本語
           </label>
+        </div>
+        <div class="settings-divider"></div>
+        <div id="clean-search-settings-options">
+          <p id="clean-search-settings-title">清爽搜索模式</p>
+          <label>
+            <input type="checkbox" id="cleansearchrightnavleft-toggle">
+            <span id="cleansearchrightnavleft-text">将右上导航栏移至左侧</span>
+          </label>
+          <p id="cleansearchrightnavleft-note" class="settings-note">此项开启时，即使选择显示左上导航栏，主页也不会显示它。</p>
         </div>
         <div class="settings-divider"></div>
         <div id="behavior-options">

@@ -3,7 +3,7 @@ let false_count = 0;
 // Map stored language preference to _locales folder name
 const langToLocale = { zh: 'zh_CN', en: 'en', ja: 'ja' };
 const supportedLangs = ['zh', 'en', 'ja'];
-const cleanSearchLockedKeys = ['homepagerecom', 'searchrecom', 'ads', 'leftnavi'];
+const cleanSearchLockedKeys = ['homepagerecom', 'searchrecom', 'ads'];
 
 // Cached messages per locale (from _locales/<locale>/messages.json)
 let messagesCache = {};
@@ -66,6 +66,12 @@ async function applyLanguage(lang) {
   const settingsMainTitle = document.getElementById('settings-main-title');
   if (settingsMainTitle) settingsMainTitle.textContent = getMessage(content, 'settingsMainTitle');
   document.getElementById('language-title').textContent = getMessage(content, 'settingsTitle');
+  const cleanSearchSettingsTitle = document.getElementById('clean-search-settings-title');
+  if (cleanSearchSettingsTitle) cleanSearchSettingsTitle.textContent = getMessage(content, 'cleanSearchModeLabel');
+  const cleanSearchRightNavLeftText = document.getElementById('cleansearchrightnavleft-text');
+  if (cleanSearchRightNavLeftText) cleanSearchRightNavLeftText.textContent = getMessage(content, 'cleanSearchRightNavLeft');
+  const cleanSearchRightNavLeftNote = document.getElementById('cleansearchrightnavleft-note');
+  if (cleanSearchRightNavLeftNote) cleanSearchRightNavLeftNote.textContent = getMessage(content, 'cleanSearchRightNavLeftNote');
   const slashText = document.getElementById('slashfocus-text');
   if (slashText) slashText.textContent = getMessage(content, 'slashfocus');
   const behaviorTitle = document.getElementById('behavior-title');
@@ -148,7 +154,7 @@ function updateCleanSearchLockText() {
 }
 
 function setupLanguageSwitching() {
-  chrome.storage.local.get(['language', 'slashfocus'], async function(result) {
+  chrome.storage.local.get(['language', 'slashfocus', 'cleansearchrightnavleft'], async function(result) {
     const savedLanguage = supportedLangs.includes(result.language) ? result.language : 'en';
     await applyLanguage(savedLanguage);
 
@@ -156,6 +162,15 @@ function setupLanguageSwitching() {
     if (slashToggle) {
       const enabled = result.slashfocus !== undefined ? !!result.slashfocus : true;
       slashToggle.checked = enabled;
+    }
+
+    const rightNavLeftToggle = document.getElementById('cleansearchrightnavleft-toggle');
+    if (rightNavLeftToggle) {
+      const enabled = result.cleansearchrightnavleft !== undefined ? !!result.cleansearchrightnavleft : true;
+      rightNavLeftToggle.checked = enabled;
+      if (result.cleansearchrightnavleft === undefined) {
+        chrome.storage.local.set({ cleansearchrightnavleft: true });
+      }
     }
   });
 
@@ -375,6 +390,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     applyCleanSearchLock(nextValue);
   });
+
+  const rightNavLeftToggle = document.getElementById('cleansearchrightnavleft-toggle');
+  if (rightNavLeftToggle) {
+    rightNavLeftToggle.addEventListener('change', function() {
+      updateStorage('cleansearchrightnavleft', this.checked);
+    });
+  }
 
   // Scroll behaviour control
   const choicesContainer = document.querySelector(".choices_container");

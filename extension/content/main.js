@@ -131,6 +131,7 @@ const settings = { // these are the defaults, initialise to all true
   columns: true,
   usrpageleftsidebar: true,
   cleansearchmode: true,
+  cleansearchrightnavleft: true,
 };
 const personal_page_prefrences = ["myvideos","myfavourites","subanimes","recentcoins","recentlikes","collections","columns","usrpageleftsidebar"];
 // In this table, "styles" selectors are hidden with visibility/pointer-events/display:none.
@@ -218,8 +219,10 @@ const modifications = {
   // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   usrpageleftsidebar: [ // last 1 is legacy
     ["styles", "div.aside,div.col-2,"]],
-  // No selectors here. applyCleanSearchMode() in clean-search.js injects the Clean Search layout, and shouldHideSetting() locks homepagerecom/searchrecom/ads/leftnavi while it is active on the main page.
+  // No selectors here. applyCleanSearchMode() in clean-search.js injects the Clean Search layout.
   cleansearchmode: [],
+  // No selectors here. Clean Search uses this to decide whether right-navi items are moved to the left; when they are, clean-search.css hides the left navi on the main page without changing the leftnavi preference.
+  cleansearchrightnavleft: [],
 };
 
 
@@ -262,6 +265,10 @@ function hideElements(before_dom_load = false) {
       clearSearchInputSuggestions();
     }
   });
+
+  if (!shouldHideSetting("leftnavi")) {
+    clean_navigation_bar(false);
+  }
 
   // Hide search box placeholder text via CSS to prevent flash before JS clears attributes
   if (shouldHideSetting("searchrecom")) {
@@ -373,7 +380,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         addVidrecomObserver(true);
       }
     } else {                         // if the user turned the option off
-      if (request.field == "leftnavi") {
+      if (request.field == "leftnavi" || request.field == "cleansearchmode" || request.field == "cleansearchrightnavleft") {
         clean_navigation_bar(false);
       } else 
       if (request.field == "searchrecom") {
@@ -516,9 +523,15 @@ document.addEventListener(
   let currentLi = null;        // the li currently observing
 
   function hideIfPresent(li) {
-    if (!shouldHideSetting("leftnavi")) return; // only hide if settings enabled
     const target = li.querySelector(":scope > .is-bottom-start");
     if (!target) return;
+
+    if (!shouldHideSetting("leftnavi")) {
+      target.style.display = "";
+      target.style.visibility = "";
+      target.style.pointerEvents = "";
+      return;
+    }
 
     target.style.display = "none";
     target.style.visibility = "hidden";

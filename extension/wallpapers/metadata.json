@@ -6,6 +6,7 @@
     "title": "Earth in View",
     "ui_foreground": {
       "logo": "light",
+      "left_nav": "light",
       "right_nav": "light",
       "brand": "light"
     }
@@ -17,6 +18,7 @@
     "title": "The last rays of an orbital sunset illuminate Earth's atmosphere and the cloud tops",
     "ui_foreground": {
       "logo": "light",
+      "left_nav": "light",
       "right_nav": "light",
       "brand": "light"
     }
@@ -28,6 +30,7 @@
     "title": "Earth Observation",
     "ui_foreground": {
       "logo": "light",
+      "left_nav": "light",
       "right_nav": "light",
       "brand": "light"
     }
@@ -39,6 +42,7 @@
     "title": "The Milky Way spans the night sky above a bright orange-yellow airglow",
     "ui_foreground": {
       "logo": "light",
+      "left_nav": "light",
       "right_nav": "light",
       "brand": "light"
     }
@@ -49,6 +53,7 @@
     "creator": "Олег Мороз",
     "ui_foreground": {
       "logo": "light",
+      "left_nav": "light",
       "right_nav": "light",
       "brand": "light"
     }
@@ -59,6 +64,7 @@
     "creator": "César Couto",
     "ui_foreground": {
       "logo": "light",
+      "left_nav": "light",
       "right_nav": "light",
       "brand": "light"
     }
@@ -69,6 +75,7 @@
     "creator": "Mohammad Alizade",
     "ui_foreground": {
       "logo": "dark",
+      "left_nav": "dark",
       "right_nav": "dark",
       "brand": "dark"
     }
@@ -79,6 +86,7 @@
     "creator": "MagicPattern",
     "ui_foreground": {
       "logo": "light",
+      "left_nav": "dark",
       "right_nav": "dark",
       "brand": "light"
     }
@@ -89,6 +97,7 @@
     "creator": "yucar studios",
     "ui_foreground": {
       "logo": "light",
+      "left_nav": "light",
       "right_nav": "light",
       "brand": "light"
     }

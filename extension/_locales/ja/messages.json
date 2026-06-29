@@ -39,6 +39,8 @@
   "cleanSearchModeOff": { "message": "クリーン検索モード：オフ" },
   "cleanSearchModeTitle": { "message": "クリーン検索モードを切り替え" },
   "cleanSearchModeLabel": { "message": "クリーン検索モード" },
+  "cleanSearchRightNavLeft": { "message": "右上ナビゲーション項目を左側に移動" },
+  "cleanSearchRightNavLeftNote": { "message": "オンの場合、表示する設定にしていても、メインページでは左上ナビゲーションバーは表示されません。" },
   "lockedByCleanSearchMode": { "message": "固定" },
   "lockedByCleanSearchModeTooltip": { "message": "クリーン検索モードがオンの間、このオプションは固定されます。" },
   "languageZh": { "message": "简体中文" },

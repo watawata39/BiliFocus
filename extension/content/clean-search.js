@@ -2,7 +2,7 @@
 // Loaded before main.js by manifest.json.
 
 
-const CLEAN_SEARCH_LOCKED_SETTINGS = ["homepagerecom", "searchrecom", "ads", "leftnavi"];
+const CLEAN_SEARCH_LOCKED_SETTINGS = ["homepagerecom", "searchrecom", "ads"];
 const CLEAN_SEARCH_RIGHT_NAV_SELECTORS = {
   membership: ".bili-focus-clean-search-mode .right-entry > .vip-wrap,.bili-focus-clean-search-mode .right-entry > :nth-child(2)",
   messages: ".bili-focus-clean-search-mode .right-entry > :nth-child(3)",
@@ -82,56 +82,66 @@ const CLEAN_SEARCH_WALLPAPERS = ["gradient3", "gradient2", "gradient1", "earth1"
 const CLEAN_SEARCH_DEFAULT_BACKGROUND = { type: "wallpaper", id: "gradient3" };
 const CLEAN_SEARCH_DEFAULT_COLOR = "#f8fafc";
 const CLEAN_SEARCH_COLOR_SWATCHES = ["#f8fafc", "#f9fafb", "#fafaf9", "#eff6ff", "#f0f9ff", "#ecfeff", "#f0fdfa", "#f0fdf4", "#fefce8", "#fff7ed", "#fdf2f8", "#f5f3ff"];
-const CLEAN_SEARCH_FOREGROUND_REGIONS = ["logo", "right_nav", "brand"];
-const CLEAN_SEARCH_LIGHT_FOREGROUND_LUMINANCE_THRESHOLD = 0.8;
+const CLEAN_SEARCH_FOREGROUND_REGIONS = ["logo", "left_nav", "right_nav", "brand"];
+const CLEAN_SEARCH_LIGHT_FOREGROUND_LUMINANCE_THRESHOLD = 0.6;
 const CLEAN_SEARCH_DEFAULT_FOREGROUND = {
   logo: "dark",
+  left_nav: "dark",
   right_nav: "dark",
   brand: "dark",
 };
 const CLEAN_SEARCH_BUILT_IN_FOREGROUNDS = {
   earth1: {
     logo: "light",
+    left_nav: "light",
     right_nav: "light",
     brand: "light",
   },
   earth2: {
     logo: "light",
+    left_nav: "light",
     right_nav: "light",
     brand: "light",
   },
   earth3: {
     logo: "light",
+    left_nav: "light",
     right_nav: "light",
     brand: "light",
   },
   gradient1: {
     logo: "light",
+    left_nav: "light",
     right_nav: "light",
     brand: "light",
   },
   gradient2: {
     logo: "dark",
+    left_nav: "dark",
     right_nav: "dark",
     brand: "dark",
   },
   gradient3: {
     logo: "light",
+    left_nav: "dark",
     right_nav: "dark",
     brand: "light",
   },
   milkyway: {
     logo: "light",
+    left_nav: "light",
     right_nav: "light",
     brand: "light",
   },
   sea: {
     logo: "light",
+    left_nav: "light",
     right_nav: "light",
     brand: "light",
   },
   startrail: {
     logo: "light",
+    left_nav: "light",
     right_nav: "light",
     brand: "light",
   },
@@ -170,8 +180,14 @@ function isCleanSearchActive() {
   return !!settings.cleansearchmode && isCleanSearchMainPage();
 }
 
+function isCleanSearchRightNavLeftAligned() {
+  return settings.cleansearchrightnavleft !== false;
+}
+
 function shouldHideSetting(key) {
-  return !!settings[key] || (isCleanSearchActive() && CLEAN_SEARCH_LOCKED_SETTINGS.includes(key));
+  if (settings[key]) return true;
+  if (!isCleanSearchActive()) return false;
+  return CLEAN_SEARCH_LOCKED_SETTINGS.includes(key);
 }
 
 function getCleanSearchMessage(key) {
@@ -186,7 +202,14 @@ function normalizeCleanSearchForegroundValue(value) {
 function normalizeCleanSearchForegroundTheme(value) {
   const theme = {};
   CLEAN_SEARCH_FOREGROUND_REGIONS.forEach((region) => {
-    theme[region] = normalizeCleanSearchForegroundValue(value && value[region]);
+    let foregroundValue = value && value[region];
+    if (region === "left_nav" && foregroundValue === undefined && value && value.right_nav !== undefined) {
+      foregroundValue = value.right_nav;
+    }
+    if (region === "right_nav" && foregroundValue === undefined && value && value.left_nav !== undefined) {
+      foregroundValue = value.left_nav;
+    }
+    theme[region] = normalizeCleanSearchForegroundValue(foregroundValue);
   });
   return theme;
 }
@@ -249,9 +272,10 @@ function getCleanSearchUploadedImageSignature() {
 
 function getCleanSearchForegroundLayoutKey() {
   const panelState = cleanSearchBackgroundPanelOpen ? "open" : "closed";
+  const navLayout = isCleanSearchRightNavLeftAligned() ? "right-nav-left" : "right-nav-right";
   const widthBucket = Math.round(window.innerWidth / 160) * 160;
   const heightBucket = Math.round(window.innerHeight / 120) * 120;
-  return `${panelState}:${widthBucket}x${heightBucket}`;
+  return `${panelState}:${navLayout}:${widthBucket}x${heightBucket}`;
 }
 
 function getStoredUploadedForegroundTheme() {
@@ -522,6 +546,18 @@ function sampleCleanSearchForegroundThemeFromImage(image) {
   return normalizeCleanSearchForegroundTheme(theme);
 }
 
+function getVisibleCleanSearchNavChildRects(selector) {
+  const nav = document.querySelector(selector);
+  if (!nav) return [];
+  return Array.from(nav.children)
+    .filter((child) => {
+      const style = window.getComputedStyle(child);
+      const rect = child.getBoundingClientRect();
+      return style.display !== "none" && style.visibility !== "hidden" && rect.width > 2 && rect.height > 2;
+    })
+    .map((child) => expandCleanSearchRect(child.getBoundingClientRect(), 8));
+}
+
 function getCleanSearchRegionRects(region) {
   if (region === "logo") {
     const logo = document.querySelector("#bili-focus-clean-brand img");
@@ -531,16 +567,15 @@ function getCleanSearchRegionRects(region) {
     const brand = document.querySelector("#bili-focus-clean-brand .bili-focus-clean-brand-pill");
     return brand ? [expandCleanSearchRect(brand.getBoundingClientRect(), 8)] : [];
   }
+  if (region === "left_nav") {
+    const selector = isCleanSearchRightNavLeftAligned()
+      ? ".bili-focus-clean-search-mode .bili-header__bar > .right-entry"
+      : ".bili-focus-clean-search-mode .bili-header__bar > .left-entry";
+    return getVisibleCleanSearchNavChildRects(selector);
+  }
   if (region === "right_nav") {
-    const rightEntry = document.querySelector(".bili-focus-clean-search-mode .bili-header__bar > .right-entry");
-    if (!rightEntry) return [];
-    return Array.from(rightEntry.children)
-      .filter((child) => {
-        const style = window.getComputedStyle(child);
-        const rect = child.getBoundingClientRect();
-        return style.display !== "none" && style.visibility !== "hidden" && rect.width > 2 && rect.height > 2;
-      })
-      .map((child) => expandCleanSearchRect(child.getBoundingClientRect(), 8));
+    if (isCleanSearchRightNavLeftAligned()) return [];
+    return getVisibleCleanSearchNavChildRects(".bili-focus-clean-search-mode .bili-header__bar > .right-entry");
   }
   return [];
 }
@@ -1161,6 +1196,18 @@ async function compressCleanSearchWallpaperFile(file) {
 }
 
 function getCleanSearchModeStyle() {
+  const hiddenHeaderChildrenSelector = isCleanSearchRightNavLeftAligned()
+    ? ":not(.center-search-container):not(.right-entry)"
+    : ":not(.center-search-container):not(.left-entry):not(.right-entry)";
+  const hiddenCleanSearchLeftNavStyles = !isCleanSearchRightNavLeftAligned() && settings.leftnavi
+    ? `
+      .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .bili-header__bar > .left-entry {
+        visibility: hidden !important;
+        pointer-events: none !important;
+        display: none !important;
+      }
+    `
+    : "";
   let hiddenRightNavStyles = "";
   Object.entries(CLEAN_SEARCH_RIGHT_NAV_SELECTORS).forEach(([key, selector]) => {
     if (settings[key]) {
@@ -1180,6 +1227,23 @@ function getCleanSearchModeStyle() {
       --bili-focus-clean-stage-right: 0px;
       --bili-focus-clean-stage-center: calc((100vw - var(--bili-focus-clean-stage-right)) / 2);
       --bili-focus-clean-blue: #007bff;
+      --bili-focus-clean-left-nav-color: rgba(24, 33, 51, 0.88);
+      --bili-focus-clean-right-nav-color: rgba(24, 33, 51, 0.88);
+    }
+
+    .bili-focus-clean-search-mode[data-bili-focus-left-nav-fg="light"] {
+      --bili-focus-clean-left-nav-color: rgba(255, 255, 255, 0.98);
+    }
+
+    .bili-focus-clean-search-mode[data-bili-focus-left-nav-fg="dark"] {
+      --bili-focus-clean-left-nav-color: rgba(24, 33, 51, 0.88);
+    }
+
+    .bili-focus-clean-search-mode[data-bili-focus-right-nav-fg="light"] {
+      --bili-focus-clean-right-nav-color: rgba(255, 255, 255, 0.98);
+    }
+
+    .bili-focus-clean-search-mode[data-bili-focus-right-nav-fg="dark"] {
       --bili-focus-clean-right-nav-color: rgba(24, 33, 51, 0.88);
     }
 
@@ -1219,7 +1283,7 @@ function getCleanSearchModeStyle() {
 
     .bili-focus-clean-search-mode #app > .bili-feed4 > :not(.bili-header),
     .bili-focus-clean-search-mode .bili-header.large-header > :not(.bili-header__bar),
-    .bili-focus-clean-search-mode .bili-header__bar > :not(.center-search-container):not(.right-entry),
+    .bili-focus-clean-search-mode .bili-header__bar > ${hiddenHeaderChildrenSelector},
     .bili-focus-clean-search-mode .bili-feed4-layout,
     .bili-focus-clean-search-mode .bili-header__channel,
     .bili-focus-clean-search-mode .header-channel,
@@ -1297,6 +1361,7 @@ function getCleanSearchModeStyle() {
     }
 
     .bili-focus-clean-search-mode[data-bili-focus-foreground-pending] #bili-focus-clean-brand,
+    .bili-focus-clean-search-mode[data-bili-focus-foreground-pending] .bili-header__bar > .left-entry,
     .bili-focus-clean-search-mode[data-bili-focus-foreground-pending] .bili-header__bar > .right-entry {
       opacity: 0 !important;
     }
@@ -1526,6 +1591,56 @@ function getCleanSearchModeStyle() {
       line-height: 16px !important;
     }
 
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .bili-header__bar > .left-entry {
+      position: fixed !important;
+      top: 24px !important;
+      left: 28px !important;
+      right: auto !important;
+      width: auto !important;
+      max-width: calc(100vw - var(--bili-focus-clean-stage-right) - 56px) !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 10px !important;
+      color: var(--bili-focus-clean-left-nav-color) !important;
+      pointer-events: auto !important;
+      z-index: 10003 !important;
+      transition: opacity 120ms ease !important;
+    }
+
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > * {
+      margin: 0 !important;
+      flex: 0 0 auto !important;
+    }
+
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a {
+      height: 34px !important;
+      min-height: 34px !important;
+      padding: 0 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 5px !important;
+      line-height: 18px !important;
+      box-sizing: border-box !important;
+    }
+
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > span,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > div {
+      color: var(--bili-focus-clean-left-nav-color) !important;
+      line-height: 18px !important;
+    }
+
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > svg,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > svg * {
+      color: var(--bili-focus-clean-left-nav-color) !important;
+    }
+
+    ${hiddenCleanSearchLeftNavStyles}
+
     .bili-focus-clean-search-mode .bili-header__bar > .right-entry {
       position: fixed !important;
       top: 24px !important;
@@ -1544,12 +1659,16 @@ function getCleanSearchModeStyle() {
       transition: right 240ms cubic-bezier(0.2, 0, 0, 1), width 240ms cubic-bezier(0.2, 0, 0, 1), opacity 120ms ease !important;
     }
 
-    .bili-focus-clean-search-mode[data-bili-focus-right-nav-fg="light"] .bili-header__bar > .right-entry {
-      --bili-focus-clean-right-nav-color: rgba(255, 255, 255, 0.98);
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-left .bili-header__bar > .right-entry {
+      --bili-focus-clean-right-nav-color: var(--bili-focus-clean-left-nav-color);
     }
 
-    .bili-focus-clean-search-mode[data-bili-focus-right-nav-fg="dark"] .bili-header__bar > .right-entry {
-      --bili-focus-clean-right-nav-color: rgba(24, 33, 51, 0.88);
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .bili-header__bar > .right-entry {
+      left: auto !important;
+      right: calc(var(--bili-focus-clean-stage-right) + 28px) !important;
+      width: auto !important;
+      max-width: calc(100vw - var(--bili-focus-clean-stage-right) - 56px) !important;
+      justify-content: flex-end !important;
     }
 
     .bili-focus-clean-search-mode .right-entry > * {
@@ -1613,6 +1732,11 @@ function getCleanSearchModeStyle() {
       visibility: visible !important;
       pointer-events: auto !important;
       display: flex !important;
+    }
+
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .right-entry > .header-avatar-wrap {
+      order: 99 !important;
+      margin-left: 0 !important;
     }
 
     .bili-focus-clean-search-mode #bili-focus-clean-bg-btn {
@@ -2422,11 +2546,17 @@ function updateCleanSearchRightPopoverClamp(shouldRun) {
 }
 
 function applyCleanSearchMode() {
+  const root = document.documentElement;
   const active = isCleanSearchActive();
-  if (!active && document.documentElement.classList.contains("bili-focus-clean-search-mode")) {
+  const wasActive = root.classList.contains("bili-focus-clean-search-mode");
+  const wasRightNavLeftAligned = root.classList.contains("bili-focus-clean-right-nav-left");
+  const rightNavLeftAligned = active && isCleanSearchRightNavLeftAligned();
+  if (wasActive && (!active || (active && wasRightNavLeftAligned !== rightNavLeftAligned))) {
     closeCleanSearchRightPopoversForNormalMode();
   }
-  document.documentElement.classList.toggle("bili-focus-clean-search-mode", active);
+  root.classList.toggle("bili-focus-clean-search-mode", active);
+  root.classList.toggle("bili-focus-clean-right-nav-left", rightNavLeftAligned);
+  root.classList.toggle("bili-focus-clean-right-nav-right", active && !rightNavLeftAligned);
 
   if (!active) {
     applyCleanSearchBackgroundVars();

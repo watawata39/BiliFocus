@@ -39,6 +39,8 @@
   "cleanSearchModeOff": { "message": "清爽搜索模式：关" },
   "cleanSearchModeTitle": { "message": "切换清爽搜索模式" },
   "cleanSearchModeLabel": { "message": "清爽搜索模式" },
+  "cleanSearchRightNavLeft": { "message": "将右上导航栏移至左侧" },
+  "cleanSearchRightNavLeftNote": { "message": "此项开启时，即使选择显示左上导航栏，主页也不会显示它。" },
   "lockedByCleanSearchMode": { "message": "已锁定" },
   "lockedByCleanSearchModeTooltip": { "message": "清爽搜索模式开启时，此选项会被锁定。" },
   "languageZh": { "message": "简体中文" },

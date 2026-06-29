@@ -39,6 +39,8 @@
   "cleanSearchModeOff": { "message": "Clean Search Mode: Off" },
   "cleanSearchModeTitle": { "message": "Toggle clean search mode" },
   "cleanSearchModeLabel": { "message": "Clean Search Mode" },
+  "cleanSearchRightNavLeft": { "message": "Move top-right navigation items to the left" },
+  "cleanSearchRightNavLeftNote": { "message": "When this is on, the top-left navigation bar will not be displayed on the main page even if you choose to show it." },
   "lockedByCleanSearchMode": { "message": "Locked" },
   "lockedByCleanSearchModeTooltip": { "message": "This option is locked while Clean Search Mode is on." },
   "languageZh": { "message": "简体中文" },
