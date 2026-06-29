@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BiliFocus 2.1.0</title>
+  <title>BiliFocus Updates</title>
   <style>
     :root {
       color-scheme: light;
@@ -86,6 +86,12 @@
 
     .content {
       padding: 34px 48px 42px;
+    }
+
+    .release-section + .release-section {
+      margin-top: 42px;
+      padding-top: 36px;
+      border-top: 1px solid var(--border);
     }
 
     .version {
@@ -208,9 +214,7 @@
         <p class="subtitle" id="subtitle">这个版本加入了清爽搜索模式。它会把 B 站首页变成一个更安静的搜索入口，并支持自定义背景。</p>
       </div>
       <div class="content">
-        <div class="version" id="version">Version 2.1.0</div>
-        <ul class="features" id="features"></ul>
-        <section class="feature extra-section" id="turnoff-section"></section>
+        <div id="release-sections"></div>
         <div class="actions">
           <button type="button" id="close">知道了</button>
         </div>
