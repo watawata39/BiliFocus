@@ -10,3 +10,4 @@ extension.zip
 dist/
 __pycache__/
 *.pyc
+publishing/promo_video/
