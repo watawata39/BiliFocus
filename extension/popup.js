@@ -1,5 +1,3 @@
-let false_count = 0;
-
 // Map stored language preference to _locales folder name
 const langToLocale = { zh: 'zh_CN', en: 'en', ja: 'ja' };
 const supportedLangs = ['zh', 'en', 'ja'];
@@ -12,13 +10,24 @@ let currentLanguage = 'en';
 let cleanSearchModeEnabled = true;
 
 function adjust_button() {
-  updateButtonText();
   updateCleanSearchButtonText();
 }
 
 function getMessage(messages, key) {
   if (!messages || !messages[key]) return '';
   return messages[key].message || '';
+}
+
+function showPopupAlert(message) {
+  const overlay = document.getElementById("custom-alert");
+  const text = document.getElementById("modal-text");
+  if (!overlay || !text) return;
+  text.textContent = message;
+  overlay.style.display = "flex";
+}
+
+function getCurrentPopupMessage(key, fallback = '') {
+  return getMessage(currentMessages, key) || fallback;
 }
 
 async function loadLocale(locale) {
@@ -79,10 +88,18 @@ async function applyLanguage(lang) {
 
   const settingsBtn = document.getElementById('settings-btn');
   if (settingsBtn) settingsBtn.title = getMessage(content, 'settingsBtnTitle');
-  const bottomBtn = document.getElementById('bottom-btn');
-  if (bottomBtn) bottomBtn.title = getMessage(content, 'bottomBtnTitle');
   const cleanSearchBtn = document.getElementById('clean-search-btn');
   if (cleanSearchBtn) cleanSearchBtn.title = getMessage(content, 'cleanSearchModeTitle');
+  const keywordBlockingBtn = document.getElementById('keyword-blocking-btn');
+  if (keywordBlockingBtn) keywordBlockingBtn.title = getMessage(content, 'keywordBlockingTitle');
+  const keywordBlockingBtnText = document.getElementById('keyword-blocking-btn-text');
+  if (keywordBlockingBtnText) keywordBlockingBtnText.textContent = getMessage(content, 'keywordBlockingLabel');
+  const choicesMenuBtn = document.getElementById('choices-menu-btn');
+  if (choicesMenuBtn) choicesMenuBtn.title = getMessage(content, 'moreOptionsTitle');
+  const selectAllBtn = document.getElementById('select-all-btn');
+  if (selectAllBtn) selectAllBtn.textContent = getMessage(content, 'selectAll');
+  const unselectAllBtn = document.getElementById('unselect-all-btn');
+  if (unselectAllBtn) unselectAllBtn.textContent = getMessage(content, 'unselectAll');
 
   const modalCloseBtn = document.getElementById('modal-close-btn');
   if (modalCloseBtn) modalCloseBtn.textContent = getMessage(content, 'modalCloseBtn');
@@ -101,21 +118,9 @@ async function applyLanguage(lang) {
   });
 
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja' : 'en';
-  updateButtonText();
   updateCleanSearchButtonText();
   updateCleanSearchLockText();
   chrome.storage.local.set({ language: lang });
-}
-
-function updateButtonText() {
-  const btn = document.getElementById('bottom-btn-text');
-  const content = currentMessages || messagesCache[langToLocale[currentLanguage]];
-  if (!content) return;
-  if (false_count === 0) {
-    btn.textContent = getMessage(content, 'unselectAll');
-  } else {
-    btn.textContent = getMessage(content, 'selectAll');
-  }
 }
 
 function updateCleanSearchButtonText() {
@@ -271,14 +276,6 @@ document.addEventListener('DOMContentLoaded', function() {
     usrpageleftsidebar: true,
   };
 
-  function recalculateFalseCount() {
-    false_count = 0;
-    Object.keys(defaults).forEach(key => {
-      const input = document.getElementById(key);
-      if (input && !input.checked) false_count++;
-    });
-  }
-
   // Function to update storage whenever a checkbox changes
   function updateStorage(key, value) {
     const obj = {};
@@ -298,6 +295,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
     });
+  }
+
+  function closeChoicesMenu() {
+    const menu = document.getElementById('choices-menu');
+    if (!menu) return;
+    menu.classList.remove('is-open');
+    menu.setAttribute('aria-hidden', 'true');
+  }
+
+  function setAllOptions(setTo) {
+    Object.keys(defaults).forEach(key => {
+      const value = cleanSearchModeEnabled && cleanSearchLockedKeys.includes(key) ? true : setTo;
+      document.getElementById(key).checked = value;
+      updateStorage(key, value);
+    });
+    applyCleanSearchLock(cleanSearchModeEnabled);
+    closeChoicesMenu();
   }
 
   function applyCleanSearchLock(enabled) {
@@ -324,7 +338,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     updateCleanSearchLockText();
-    recalculateFalseCount();
     adjust_button();
   }
 
@@ -361,21 +374,29 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         updateStorage(id, this.checked);
-        recalculateFalseCount();
         adjust_button();
       });
     });
 
-  // Select All / Unselect All button logic
-  document.getElementById('bottom-btn').addEventListener('click', function() {
-    const set_to = false_count === 0 ? false : true;
-    Object.keys(defaults).forEach(key => {
-      const value = cleanSearchModeEnabled && cleanSearchLockedKeys.includes(key) ? true : set_to;
-      document.getElementById(key).checked = value;
-      updateStorage(key, value);
-    });
+  const choicesMenuBtn = document.getElementById('choices-menu-btn');
+  const choicesMenu = document.getElementById('choices-menu');
+  const selectAllBtn = document.getElementById('select-all-btn');
+  const unselectAllBtn = document.getElementById('unselect-all-btn');
 
-    applyCleanSearchLock(cleanSearchModeEnabled);
+  if (choicesMenuBtn && choicesMenu) {
+    choicesMenuBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const shouldOpen = !choicesMenu.classList.contains('is-open');
+      choicesMenu.classList.toggle('is-open', shouldOpen);
+      choicesMenu.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+    });
+  }
+  if (selectAllBtn) selectAllBtn.addEventListener('click', () => setAllOptions(true));
+  if (unselectAllBtn) unselectAllBtn.addEventListener('click', () => setAllOptions(false));
+  document.addEventListener('click', (event) => {
+    if (!choicesMenu || !choicesMenuBtn) return;
+    if (choicesMenu.contains(event.target) || choicesMenuBtn.contains(event.target)) return;
+    closeChoicesMenu();
   });
 
   // Clean Search Mode toggle
@@ -390,6 +411,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     applyCleanSearchLock(nextValue);
   });
+
+  const keywordBlockingBtn = document.getElementById('keyword-blocking-btn');
+  if (keywordBlockingBtn) {
+    keywordBlockingBtn.addEventListener('click', () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs && tabs[0];
+        if (!tab || !tab.id) {
+          showPopupAlert(getCurrentPopupMessage('keywordBlockingUnavailable', 'Keyword Blocking settings menu can only be opened on Bilibili pages.'));
+          return;
+        }
+        chrome.tabs.sendMessage(tab.id, { action: "openKeywordBlockingPanel" }, () => {
+          if (chrome.runtime.lastError) {
+            showPopupAlert(getCurrentPopupMessage('keywordBlockingUnavailable', 'Keyword Blocking settings menu can only be opened on Bilibili pages.'));
+            return;
+          }
+          window.close();
+        });
+      });
+    });
+  }
 
   const rightNavLeftToggle = document.getElementById('cleansearchrightnavleft-toggle');
   if (rightNavLeftToggle) {
@@ -412,6 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
     choicesContainer.style.maxHeight = `${Math.min(fullChoicesHeight, maxChoicesHeight)}px`;
     choicesContainer.style.overflowY = fullChoicesHeight > maxChoicesHeight ? 'auto' : 'hidden';
   }
+
   checkOverflow();
 
   // Group Displays
@@ -460,7 +502,7 @@ const feedbackCloseBtn = document.getElementById("modal-close-btn");
 if (feedbackLink && feedbackOverlay) {
   feedbackLink.addEventListener("click", (e) => {
     e.preventDefault();
-    feedbackOverlay.style.display = "flex";
+    showPopupAlert(getCurrentPopupMessage('modalText', 'For feedback, please email waterlemon0096@gmail.com.'));
   });
 }
 

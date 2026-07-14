@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "description": "__MSG_extDesc__",
   "default_locale": "zh_CN",
   "permissions": ["storage"],
@@ -11,7 +11,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.bilibili.com/*"],
-      "js": ["content/clean-search.js", "content/main.js"],
+      "js": ["content/clean-search.js", "content/keyword-blocking.js", "content/main.js"],
       "run_at": "document_start"
     }
   ],
@@ -21,6 +21,7 @@
         "icons/pen.svg",
         "icons/BILIBILI_LOGO.svg",
         "icons/cross.svg",
+        "icons/ad_blocked.svg",
         "icons/pallet.svg",
         "icons/upload.svg",
         "wallpapers/*.jpg",

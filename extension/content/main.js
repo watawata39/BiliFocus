@@ -137,6 +137,7 @@ const personal_page_prefrences = ["myvideos","myfavourites","subanimes","recentc
 const right_navi_preferences = ["membership", "messages", "dongtai", "favourites", "history", "tougao"];
 // In this table, "styles" selectors are hidden with visibility/pointer-events/display:none.
 // "styles2" selectors are hidden with visibility/pointer-events only.
+// "adplaceholder" selectors keep the matched card's layout space, hide its children, and paint the ad-blocked placeholder image.
 const modifications = {
   // CSS only for the homepage recommendation layout itself.
   homepagerecom: [
@@ -185,10 +186,10 @@ const modifications = {
     ["styles2", '.right-entry > :nth-child(7),'], // 创意中心 icon
     ["styles2", '.right-entry > :nth-child(8),.right-entry .header-upload-entry,'], // 投稿 icon, the second is for the icon that flashes on load in video streaming page
   ],
-  // CSS only. Common ad containers use direct selectors; main/search ad cards use :has() to detect inner ad markers.
+  // CSS only. Common ad containers are hidden; main/search ad cards use :has() to show a placeholder without collapsing the card.
   ads: [
     ["styles", "#slide_ad,.ad-report,.video-card-ad-small,.adcard-content,.bili-dyn-ads,.head-title,.ad-img,.adcard,div.section.game,div.video-page-game-card-small,"],  // other ad containers
-    ["styles2", ".bili-feed-card:has(a.bili-video-card__image--link[href*=\"ad_card\"]),.bili-video-card:has(.bili-video-card__stats--ad),"],],  // ad video cards on main page and search page respectively. The former does not distinguish between ad and 创意推广
+    ["adplaceholder", ".bili-feed-card:has(a.bili-video-card__image--link[href*=\"ad_card\"]),.bili-video-card:has(.bili-video-card__stats--ad),"],],  // ad video cards on main page and search page respectively. Does not distinguish between ad and 创意推广
   // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   myvideos: [
     ["styles", "div.section.i-pin-v,div.section.video,"], // for legacy UI
@@ -239,6 +240,7 @@ function hideElements(before_dom_load = false) {
   
   let styles = ""; // classes to be removed via global css insertment
   let styles2 = "";  // without the display = false field
+  let adPlaceholderStyles = "";
   // Detect whether it is the user's personal page
   let is_personal_page = false;
 
@@ -255,6 +257,9 @@ function hideElements(before_dom_load = false) {
           break;
         case "styles2":
           styles2 += instruction[1];
+          break;
+        case "adplaceholder":
+          adPlaceholderStyles += instruction[1];
           break;
       }
     }
@@ -298,6 +303,56 @@ function hideElements(before_dom_load = false) {
     `, "bili-focus-style-2");
   } else {
     addGlobalStyle('', "bili-focus-style-2");
+  }
+  if (adPlaceholderStyles !== "") {
+    const adBlockedPlaceholderUrl = chrome.runtime.getURL("icons/ad_blocked.svg");
+    const adPlaceholderSelectors = adPlaceholderStyles.substring(0, adPlaceholderStyles.length - 1);
+    const adPlaceholderChildSelectors = adPlaceholderSelectors
+      .split(",")
+      .map((selector) => selector.trim())
+      .filter(Boolean)
+      .map((selector) => `${selector} > *`)
+      .join(",");
+    const adPlaceholderPseudoSelectors = adPlaceholderSelectors
+      .split(",")
+      .map((selector) => selector.trim())
+      .filter(Boolean)
+      .map((selector) => `${selector}::after`)
+      .join(",");
+    addGlobalStyle(`${adPlaceholderSelectors}
+     {
+        position: relative !important;
+        visibility: visible !important;
+        pointer-events: none !important;
+        background: #f3f5f8 !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        isolation: isolate !important;
+      }
+      ${adPlaceholderPseudoSelectors}
+      {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        width: min(84px, 45%) !important;
+        height: min(80px, 45%) !important;
+        margin: auto !important;
+        background-color: rgba(38, 48, 64, 0.58) !important;
+        z-index: 1 !important;
+        -webkit-mask: url("${adBlockedPlaceholderUrl}") center / contain no-repeat !important;
+        mask: url("${adBlockedPlaceholderUrl}") center / contain no-repeat !important;
+        visibility: visible !important;
+        pointer-events: none !important;
+      }
+      ${adPlaceholderChildSelectors}
+      {
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+    `, "bili-focus-style-ad-placeholder");
+  } else {
+    addGlobalStyle('', "bili-focus-style-ad-placeholder");
   }
   applyCleanSearchMode();
 }

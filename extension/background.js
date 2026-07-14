@@ -1,5 +1,5 @@
-const RELEASE_NOTES_VERSION = "2.1.4";
-const RELEASE_NOTES_VERSIONS = ["2.1.0", "2.1.4"];
+const RELEASE_NOTES_VERSION = "2.2.0";
+const RELEASE_NOTES_VERSIONS = ["2.2.0"];
 
 function getReleaseNotesStorageKey(version) {
   return `releaseNotesShown:${version}`;

@@ -13,6 +13,7 @@ A browser extension that helps you use [bilibili.com](https://www.bilibili.com) 
   - **Top-right navi:** Membership icon, messages icon, subscription posts icon, favourites icon, history icon, creativity center & post icon.
   - **Personal homepage** (on your own space page only): My videos, favourites, subscribed animes, recent coins, collections, columns, recent likes, left sidebar.
 - **Clean Search Mode** — Turn the Bilibili main page into a google-style search page. You can also customise the wallpaper! 
+- **Video Card Blocking** — Block homepage and search-result video cards by title with keywords or regular expressions. Keyword settings can be imported and exported.
 - **“/” to search** — Press `/` (like on YouTube) to focus the search bar from anywhere on the site.
 - **Multilingual** — Interface in 简体中文, English, and 日本語.
 
@@ -38,7 +39,7 @@ A browser extension that helps you use [bilibili.com](https://www.bilibili.com) 
 2. Click the BiliFocus icon in the toolbar.
 3. Toggle the options you want to hide or show.
 
-Use the **Settings** icon at the top-right corner in the popup to enable/disable Clean Search Mode, switch languages or turn the “/” search shortcut on or off.
+Use the **Settings** icon at the top-right corner in the popup to enable/disable Clean Search Mode, switch languages or turn the “/” search shortcut on or off. Use **Block Video Cards** in the popup to manage keyword and regex blocking rules.
 
 ---
 

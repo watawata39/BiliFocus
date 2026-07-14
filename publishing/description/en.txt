@@ -15,6 +15,9 @@ Choose exactly which Bilibili sections to hide or show. Settings are saved and a
 * Clean Search Mode
 Turn the Bilibili main page into a peaceful google-like search page, with customisable background.
 
+* Video Card Blocking
+Block homepage and search-result video cards by title with keywords or regular expressions.
+
 * "/" Search Shortcut
 Press / to focus the search bar quickly, YouTube-style.
 
