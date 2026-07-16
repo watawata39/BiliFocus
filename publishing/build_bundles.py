@@ -21,6 +21,7 @@ from typing import Iterable
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_EXTENSION_DIR = PROJECT_ROOT / "extension"
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "dist"
+RELEASE_NOTES_METADATA_PATH = Path("release-notes") / "metadata.json"
 
 SKIPPED_DIRS = {
     "__MACOSX",
@@ -77,6 +78,14 @@ def extension_files(extension_dir: Path) -> Iterable[Path]:
         yield path
 
 
+def should_skip_release_notes(relative_path: Path, include_release_notes: bool) -> bool:
+    if not relative_path.parts or relative_path.parts[0] != "release-notes":
+        return False
+    if relative_path == RELEASE_NOTES_METADATA_PATH:
+        return False
+    return not include_release_notes
+
+
 def load_manifest(extension_dir: Path) -> dict:
     manifest_path = extension_dir / "manifest.json"
     try:
@@ -86,6 +95,25 @@ def load_manifest(extension_dir: Path) -> dict:
         raise SystemExit(f"Manifest not found: {manifest_path}") from None
     except json.JSONDecodeError as error:
         raise SystemExit(f"Invalid manifest JSON: {error}") from None
+
+
+def load_release_notes_metadata(extension_dir: Path) -> dict:
+    metadata_path = extension_dir / RELEASE_NOTES_METADATA_PATH
+    try:
+        with metadata_path.open("r", encoding="utf-8") as metadata_file:
+            metadata = json.load(metadata_file)
+    except FileNotFoundError:
+        return {"enabled": False}
+    except json.JSONDecodeError as error:
+        raise SystemExit(f"Invalid release notes metadata JSON: {error}") from None
+
+    if not isinstance(metadata, dict):
+        raise SystemExit("Release notes metadata must be a JSON object.")
+    return metadata
+
+
+def release_notes_enabled(metadata: dict) -> bool:
+    return metadata.get("enabled") is True
 
 
 def manifest_version(manifest: dict) -> str:
@@ -279,6 +307,7 @@ def write_bundle(
     extension_dir: Path,
     output_path: Path,
     manifest: dict,
+    include_release_notes: bool,
 ) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -303,6 +332,8 @@ def write_bundle(
                 relative_path = source_path.relative_to(extension_dir)
                 if relative_path.as_posix() == "manifest.json":
                     continue
+                if should_skip_release_notes(relative_path, include_release_notes):
+                    continue
                 archive.writestr(relative_path.as_posix(), file_bytes_for_bundle(source_path))
 
         os.replace(temp_path, output_path)
@@ -317,16 +348,20 @@ def main() -> int:
     output_dir = args.out_dir.resolve()
 
     manifest = load_manifest(extension_dir)
+    release_notes_metadata = load_release_notes_metadata(extension_dir)
+    include_release_notes = release_notes_enabled(release_notes_metadata)
     version = manifest_version(manifest)
 
     chrome_edge_bundle = output_dir / f"bilifocus-{version}-chrome-edge.zip"
     firefox_bundle = output_dir / f"bilifocus-{version}-firefox.zip"
 
-    write_bundle(extension_dir, chrome_edge_bundle, manifest)
-    write_bundle(extension_dir, firefox_bundle, firefox_manifest(manifest))
+    write_bundle(extension_dir, chrome_edge_bundle, manifest, include_release_notes)
+    write_bundle(extension_dir, firefox_bundle, firefox_manifest(manifest), include_release_notes)
 
     print(f"Built {display_path(chrome_edge_bundle)}")
     print(f"Built {display_path(firefox_bundle)}")
+    if not include_release_notes:
+        print("Release notes are disabled; skipped release-notes page assets.")
     return 0
 
 
