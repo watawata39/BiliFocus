@@ -765,7 +765,6 @@ function renderCleanSearchBackgroundPanel() {
   const closeButton = document.createElement("button");
   closeButton.type = "button";
   closeButton.className = "bili-focus-clean-bg-panel-close";
-  closeButton.title = getCleanSearchMessage("closeWallpapers");
   closeButton.setAttribute("aria-label", getCleanSearchMessage("closeWallpapers"));
   closeButton.addEventListener("click", () => setCleanSearchBackgroundPanelOpen(false));
 
@@ -1813,7 +1812,7 @@ function getCleanSearchModeStyle() {
       justify-content: center !important;
       padding: 0 !important;
       cursor: pointer !important;
-      z-index: 2147483647 !important;
+      z-index: 2147483645 !important;
       pointer-events: auto !important;
       transition: right 240ms cubic-bezier(0.2, 0, 0, 1), background-color 160ms ease, opacity 120ms ease !important;
     }

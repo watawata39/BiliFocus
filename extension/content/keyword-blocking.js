@@ -622,6 +622,12 @@ function installKeywordBlockingStyles() {
       transform: translateY(0) !important;
     }
 
+    .bili-focus-keyword-inline-message.is-error {
+      border-color: rgba(217, 45, 32, 0.18) !important;
+      background: rgba(217, 45, 32, 0.08) !important;
+      color: #d92d20 !important;
+    }
+
     .bili-focus-keyword-list {
       display: flex !important;
       flex-wrap: wrap !important;
@@ -1070,22 +1076,25 @@ function renderKeywordBlockingPanel() {
       event.stopPropagation();
       removeKeywordBlockingRule(rule.id);
     });
+    remove.removeAttribute("title");
 
     item.append(text, remove);
     list.appendChild(item);
   });
 }
 
-function showKeywordBlockingInlineMessage(messageKey) {
+function showKeywordBlockingInlineMessage(messageKey, variant = "") {
   const panel = document.getElementById(KEYWORD_BLOCKING_PANEL_ID);
   const message = panel ? panel.querySelector(".bili-focus-keyword-inline-message") : null;
   if (!message) return;
 
   message.textContent = getKeywordBlockingMessage(messageKey);
+  message.classList.toggle("is-error", variant === "error");
   message.classList.add("is-visible");
   if (keywordBlockingInlineMessageTimer) clearTimeout(keywordBlockingInlineMessageTimer);
   keywordBlockingInlineMessageTimer = setTimeout(() => {
     message.classList.remove("is-visible");
+    message.classList.remove("is-error");
     keywordBlockingInlineMessageTimer = 0;
   }, 2200);
 }
@@ -1100,6 +1109,9 @@ function submitKeywordBlockingRule(panel) {
     if (result.inline && result.error) {
       error.textContent = "";
       showKeywordBlockingInlineMessage(result.error);
+    } else if (result.error === "invalidRegex") {
+      error.textContent = "";
+      showKeywordBlockingInlineMessage(result.error, "error");
     } else {
       error.textContent = result.error ? getKeywordBlockingMessage(result.error) : "";
     }
@@ -1127,6 +1139,7 @@ function openKeywordBlockingPanel() {
   title.className = "bili-focus-keyword-title";
 
   const closeButton = createKeywordBlockingIconButton("bili-focus-keyword-close", "close", closeKeywordBlockingPanel);
+  closeButton.removeAttribute("title");
   header.append(title, closeButton);
 
   const body = document.createElement("div");

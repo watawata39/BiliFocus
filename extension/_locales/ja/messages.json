@@ -37,7 +37,7 @@
   "moreOptionsTitle": { "message": "その他のオプション" },
   "keywordBlockingTitle": { "message": "動画カードブロック設定を開く" },
   "keywordBlockingLabel": { "message": "動画カードブロック" },
-  "keywordBlockingUnavailable": { "message": "キーワードブロック設定メニューは Bilibili ページでのみ開けます。" },
+  "keywordBlockingUnavailable": { "message": "動画カードブロック設定パネルは Bilibili ページでのみ開けます。" },
   "cleanSearchModeOn": { "message": "クリーン検索モード：オン" },
   "cleanSearchModeOff": { "message": "クリーン検索モード：オフ" },
   "cleanSearchModeTitle": { "message": "クリーン検索モードを切り替え" },

@@ -418,12 +418,12 @@ document.addEventListener('DOMContentLoaded', function() {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs && tabs[0];
         if (!tab || !tab.id) {
-          showPopupAlert(getCurrentPopupMessage('keywordBlockingUnavailable', 'Keyword Blocking settings menu can only be opened on Bilibili pages.'));
+          showPopupAlert(getCurrentPopupMessage('keywordBlockingUnavailable', 'The Video Card Blocking settings panel can only be opened on Bilibili pages.'));
           return;
         }
         chrome.tabs.sendMessage(tab.id, { action: "openKeywordBlockingPanel" }, () => {
           if (chrome.runtime.lastError) {
-            showPopupAlert(getCurrentPopupMessage('keywordBlockingUnavailable', 'Keyword Blocking settings menu can only be opened on Bilibili pages.'));
+            showPopupAlert(getCurrentPopupMessage('keywordBlockingUnavailable', 'The Video Card Blocking settings panel can only be opened on Bilibili pages.'));
             return;
           }
           window.close();
@@ -442,6 +442,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Scroll behaviour control
   const choicesContainer = document.querySelector(".choices_container");
   const popupMaxHeight = 560;
+  const expandedListBottomGap = 10;
 
   function checkOverflow() {
     choicesContainer.style.maxHeight = 'none';
@@ -452,6 +453,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     choicesContainer.style.maxHeight = `${Math.min(fullChoicesHeight, maxChoicesHeight)}px`;
     choicesContainer.style.overflowY = fullChoicesHeight > maxChoicesHeight ? 'auto' : 'hidden';
+  }
+
+  function scrollExpandedContentIntoView(content) {
+    const containerRect = choicesContainer.getBoundingClientRect();
+    const contentRect = content.getBoundingClientRect();
+    const bottomOverflow = contentRect.bottom + expandedListBottomGap - containerRect.bottom;
+    const topOverflow = contentRect.top - containerRect.top;
+
+    if (bottomOverflow > 0) {
+      choicesContainer.scrollTo({
+        top: choicesContainer.scrollTop + bottomOverflow,
+        behavior: 'smooth'
+      });
+    } else if (topOverflow < 0) {
+      choicesContainer.scrollTo({
+        top: choicesContainer.scrollTop + topOverflow,
+        behavior: 'smooth'
+      });
+    }
   }
 
   checkOverflow();
@@ -479,10 +499,10 @@ document.addEventListener('DOMContentLoaded', function() {
         content.style.display = "block";
         title.classList.remove("collapsed");
         
-        // Scroll the expanded content into view
+        // Scroll the expanded content into view with a little space below it.
         setTimeout(() => {
-          content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           checkOverflow();
+          scrollExpandedContentIntoView(content);
         }, 50);
       } else {
         content.style.display = "none";

@@ -37,7 +37,7 @@
   "moreOptionsTitle": { "message": "More options" },
   "keywordBlockingTitle": { "message": "Open video card blocking settings" },
   "keywordBlockingLabel": { "message": "Block Video Cards" },
-  "keywordBlockingUnavailable": { "message": "Keyword Blocking settings menu can only be opened on Bilibili pages." },
+  "keywordBlockingUnavailable": { "message": "The Video Card Blocking settings panel can only be opened on Bilibili pages." },
   "cleanSearchModeOn": { "message": "Clean Search Mode: On" },
   "cleanSearchModeOff": { "message": "Clean Search Mode: Off" },
   "cleanSearchModeTitle": { "message": "Toggle clean search mode" },

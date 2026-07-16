@@ -281,11 +281,15 @@
         color: var(--btn-bg);
       }
 
-      #choices-menu-btn img {
+      .choices-menu-icon {
         width: 16px;
         height: 16px;
-        opacity: 0.68;
+        margin-left: 0;
+        background: currentColor;
+        opacity: 0.85;
         display: block;
+        -webkit-mask: url("icons/ellipsis.svg") center / contain no-repeat;
+        mask: url("icons/ellipsis.svg") center / contain no-repeat;
       }
 
       #choices-menu {
@@ -400,6 +404,28 @@
       #keyword-blocking-btn {
         margin-top: 0;
         min-height: 30px;
+        gap: 6px;
+      }
+
+      #keyword-blocking-btn-text {
+        flex: 0 1 auto;
+      }
+
+      .panel-entry-icon {
+        flex: 0 0 auto;
+        width: 13px;
+        height: 13px;
+        margin-left: 0;
+        background: currentColor;
+        opacity: 0.55;
+        pointer-events: none;
+        -webkit-mask: url("icons/chevron-right.svg") center / contain no-repeat;
+        mask: url("icons/chevron-right.svg") center / contain no-repeat;
+        transition: opacity 0.2s ease;
+      }
+
+      #keyword-blocking-btn:hover .panel-entry-icon {
+        opacity: 0.75;
       }
 
       #feedback-link {
@@ -463,6 +489,8 @@
         font-size: 14px;
         transition: all 0.2s ease;
         box-shadow: 0 2px 4px rgba(0,123,255,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
+        user-select: none;
+        -webkit-user-select: none;
       }
 
       #modal-close-btn:hover {
@@ -483,7 +511,7 @@
         padding: 6px;
         margin-top: 6px;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: box-shadow 0.2s ease, background 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -491,12 +519,10 @@
       }
 
       #settings-btn:hover {
-        transform: translateY(-1px);
         box-shadow: 0 3px 6px rgba(0,123,255,0.4), inset 0 1px 2px rgba(255,255,255,0.2);
       }
 
       #settings-btn:active {
-        transform: translateY(0);
         box-shadow: 0 1px 2px rgba(0,123,255,0.3), inset 0 1px 2px rgba(0,0,0,0.2);
       }
 
@@ -505,6 +531,15 @@
         height: 18px;
         display: block;
         filter: invert(1);
+        transform: rotate(0deg);
+        transform-origin: center;
+        transition: transform 0.42s cubic-bezier(0.35, 0, 0.2, 1);
+        will-change: transform;
+      }
+
+      #settings-btn:hover #settings-icon {
+        transform: rotate(60deg);
+        transition-timing-function: cubic-bezier(0.2, 0.9, 0.2, 1);
       }
 
       #settings-main-title {
@@ -667,7 +702,7 @@
     <div class="choices_container">
     <div class="choices-menu-anchor">
       <button id="choices-menu-btn" type="button" title="More">
-        <img src="icons/ellipsis.svg" alt="">
+        <span class="choices-menu-icon" aria-hidden="true"></span>
       </button>
       <div id="choices-menu" role="menu" aria-hidden="true">
         <button class="choices-menu-item" id="select-all-btn" type="button" role="menuitem">全部选择</button>
@@ -788,6 +823,7 @@
 
       <button id="keyword-blocking-btn" title="Video card blocking" type="button">
         <span id="keyword-blocking-btn-text" style="font-style: normal;">视频卡片屏蔽</span>
+        <span class="panel-entry-icon" aria-hidden="true"></span>
       </button>
 
       <a href="#" id="feedback-link"><span id="feedback-text" style="font-style: normal;">意见反馈</span></a>
