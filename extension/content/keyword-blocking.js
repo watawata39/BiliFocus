@@ -416,7 +416,7 @@ function installKeywordBlockingStyles() {
       visibility: visible !important;
       pointer-events: none !important;
       background: #f3f5f8 !important;
-      border-radius: 8px !important;
+      border-radius: 6px !important;
       box-shadow: none !important;
       overflow: hidden !important;
       isolation: isolate !important;
