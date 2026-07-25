@@ -189,7 +189,7 @@ const modifications = {
   // CSS only. Common ad containers are hidden; main/search ad cards use :has() to show a placeholder without collapsing the card.
   ads: [
     ["styles", "#slide_ad,.ad-report,.video-card-ad-small,.adcard-content,.bili-dyn-ads,.head-title,.ad-img,.adcard,div.section.game,div.video-page-game-card-small,"],  // other ad containers
-    ["adplaceholder", ".bili-feed-card:has(a.bili-video-card__image--link[href*=\"ad_card\"]),.bili-video-card:has(.bili-video-card__stats--ad),"],],  // ad video cards on main page and search page respectively. Does not distinguish between ad and 创意推广
+    ["adplaceholder", ".bili-feed-card:has(a.bili-video-card__image--link[href*=\"ad_card\"]),.bili-feed-card:has(div.bili-video-card__image--link):has(.bili-video-card__stats > .bili-video-card__stats--text):has(.bili-video-card__info--owner.disable-hover),.bili-video-card:has(.bili-video-card__stats--ad),"],],  // most ad video cards on main page; game-miniprogram ad card on main page; search page. Does not distinguish between ad and 创意推广
   // CSS only; hideElements() applies this only on the signed-in user's own personal page.
   myvideos: [
     ["styles", "div.section.i-pin-v,div.section.video,"], // for legacy UI
