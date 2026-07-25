@@ -144,7 +144,7 @@ const modifications = {
     ["styles", ".bili-feed4-layout,.bili-header__channel,.header-channel,.palette-button-wrap,.bili-footer,"],],
   // CSS hides the recommendation surfaces. addVidrecomObserver() does not hide extra nodes; it re-enables cancel/countdown controls inside Bilibili's ending panel when autoplay is on.
   vidrecom: [
-    ["styles", ".recommend-list-v1,.pop-live-small-mode,div[class^='recommend_wrap'],"],
+    ["styles", ".recommend-list-v1,.pop-live-small-mode,div[class^='recommend_wrap'],.playlist-container--right .recommend-list-container,"],
     ["styles2", ".bpx-player-ending-related,"],],
   // CSS only.
   comments: [
