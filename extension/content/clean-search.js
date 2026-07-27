@@ -223,7 +223,7 @@ let cleanSearchRightPopoverLastLeftSignatures = {};
 
 function isCleanSearchMainPage() {
   return window.location.hostname === "www.bilibili.com" &&
-    (window.location.pathname === "/" || window.location.pathname === "");
+    ["", "/", "/index.html"].includes(window.location.pathname);
 }
 
 function isCleanSearchActive() {

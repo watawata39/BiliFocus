@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-7-27",
+    "version": "2.2.4",
+    "changes": [
+      "修复了清爽搜索模式isCleanSearchMainPage()不匹配'/index.html'pathname的问题"
+    ]
+  },
+  {
     "date": ["2026-07-25", 2],
     "version": "2.2.3",
     "changes": [
