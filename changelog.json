@@ -1,6 +1,14 @@
 [
   {
-    "date": "2026-09-05",
+    "date": ["2026-09-05", 2],
+    "version": "2.3.2",
+    "changes": [
+      "修复了隐藏搜索推荐时搜索栏仍会显示推荐词悬停提示的问题"
+    ],
+    "details": "Search input suggestion suppression now remains active for as long as search recommendations are hidden. It removes title attributes that Bilibili adds or updates later, handles replacement search input elements, avoids repeated no-op attribute writes, and disconnects while restoring the original input attributes when search recommendations become visible again."
+  },
+  {
+    "date": ["2026-09-05", 1],
     "version": "2.3.1",
     "changes": [
       "修复了清爽搜索模式下搜索栏出现后仍可能短暂显示白色背景的问题"

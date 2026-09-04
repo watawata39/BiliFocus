@@ -24,7 +24,8 @@ function removeGlobalStyle(id = "bili-focus-style") {
 
 // searchrecom: store original placeholder/title for restore when option is turned off
 var original_placeholder = '', original_title = '';
-var searchrecomObserver = null; // one-shot observer to clear search inputs when they appear
+var searchrecomObserver = null;
+var searchInputSuggestionsSuppressed = false;
 const SEARCH_INPUT_SELECTORS = ".nav-search-input, .nav-search-keyword, #nav-searchform > div.p-relative.search-bar.over-hidden.border-box.t-nowrap > input";
 const SEARCH_INPUT_PLACEHOLDER_SELECTORS = ".nav-search-input::placeholder, .nav-search-keyword::placeholder, #nav-searchform > div.p-relative.search-bar.over-hidden.border-box.t-nowrap > input::placeholder";
 function clearSearchInputSuggestions() {
@@ -37,24 +38,49 @@ function clearSearchInputSuggestions() {
       original_title = first.getAttribute("title") || '';
     }
     inputs.forEach(el => {
-      el.setAttribute("placeholder", "");
-      el.setAttribute("title", "");
+      if (el.getAttribute("placeholder") !== "") {
+        el.setAttribute("placeholder", "");
+      }
+      if (el.hasAttribute("title")) {
+        el.removeAttribute("title");
+      }
     });
     return true;
   }
-  if (!document.body) return;
-  if (clearInputs()) return;
+
+  searchInputSuggestionsSuppressed = true;
+  clearInputs();
+  if (searchrecomObserver || !document.documentElement) return;
+
+  searchrecomObserver = new MutationObserver(() => {
+    if (!shouldHideSetting("searchrecom")) {
+      restoreSearchInputSuggestions();
+      return;
+    }
+    clearInputs();
+  });
+  searchrecomObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["placeholder", "title"],
+  });
+}
+
+function restoreSearchInputSuggestions() {
+  if (!searchInputSuggestionsSuppressed && !searchrecomObserver) return;
   if (searchrecomObserver) {
     searchrecomObserver.disconnect();
     searchrecomObserver = null;
   }
-  searchrecomObserver = new MutationObserver(() => {
-    if (clearInputs()) {
-      searchrecomObserver.disconnect();
-      searchrecomObserver = null;
-    }
+
+  const placeholder = original_placeholder !== '' ? original_placeholder : '搜索';
+  document.querySelectorAll(SEARCH_INPUT_SELECTORS).forEach(el => {
+    el.setAttribute("placeholder", placeholder);
+    if (original_title !== '') el.setAttribute("title", original_title);
+    else el.removeAttribute("title");
   });
-  searchrecomObserver.observe(document.body, { childList: true, subtree: true });
+  searchInputSuggestionsSuppressed = false;
 }
 
 function getCookieValue(cookieName) {
@@ -157,7 +183,7 @@ const modifications = {
     ["styles2", "#prehold-nav-vm > div > div:nth-of-type(n+3):nth-of-type(-n+16),"],  // elements that flash by when https://live.bilibili.com/ is loaded
     ["styles2", "#left-part > div > div > div.flex-block > div,#left-part > div > div > div.flex-block > div > div > div.dp-table-cell.v-middle,#left-part > div > div > div.showmore-link.p-relative.f-left,"], // streaming page
   ],
-  // CSS hides recommendation/trending panels. clearSearchInputSuggestions() also clears search input placeholder/title via JS, and hideElements() adds placeholder CSS to prevent text flash.
+  // CSS hides recommendation/trending panels. While hidden, clearSearchInputSuggestions() continuously removes search input placeholder/title updates, and hideElements() adds placeholder CSS to prevent text flash.
   searchrecom: [
     ["styles", ".trending,.bili-dyn-topic-box,.topic-panel,.channel-menu-mini,.bili-dyn-search-trendings,"],
   ],
@@ -266,9 +292,6 @@ function hideElements(before_dom_load = false) {
     if (key == "leftnavi") {
       clean_navigation_bar();
       setTimeout(clean_navigation_bar, 150);  // call again to clean any later-added items
-    } else
-    if (key == "searchrecom") {
-      clearSearchInputSuggestions();
     }
   });
 
@@ -278,8 +301,10 @@ function hideElements(before_dom_load = false) {
 
   // Hide search box placeholder text via CSS to prevent flash before JS clears attributes
   if (shouldHideSetting("searchrecom")) {
+    clearSearchInputSuggestions();
     addGlobalStyle(`${SEARCH_INPUT_PLACEHOLDER_SELECTORS} { color: transparent !important; opacity: 0 !important; }`, "bili-focus-style-searchrecom");
   } else {
+    restoreSearchInputSuggestions();
     addGlobalStyle("", "bili-focus-style-searchrecom");
   }
 
@@ -546,20 +571,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else {                         // if the user turned the option off
       if (request.field == "leftnavi" || request.field == "cleansearchmode" || request.field == "cleansearchrightnavleft") {
         clean_navigation_bar(false);
-      } else 
-      if (request.field == "searchrecom") {
-        if (searchrecomObserver) {
-          searchrecomObserver.disconnect();
-          searchrecomObserver = null;
-        }
-        // Page loaded with searchrecom on: we never captured originals, so use 搜索
-        const place = original_placeholder !== '' ? original_placeholder : '搜索';
-        const title = original_title !== '' ? original_title : '';
-        document.querySelectorAll(SEARCH_INPUT_SELECTORS).forEach(el => {
-          el.setAttribute("placeholder", place);
-          if (title !== '') el.setAttribute("title", title);
-          else el.removeAttribute("title");
-        });
       }
     }
     
