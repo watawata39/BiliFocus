@@ -435,9 +435,13 @@ async function initializeBiliFocusBeforeFirstPaint() {
     }
     hideElements(true);
     if (typeof applyKeywordBlocking === "function") applyKeywordBlocking();
-    if (typeof waitForCleanSearchBackgroundImage === "function") {
-      await waitForCleanSearchBackgroundImage();
+    const backgroundImageReady = typeof waitForCleanSearchBackgroundImage === "function"
+      ? waitForCleanSearchBackgroundImage()
+      : Promise.resolve();
+    if (typeof waitForCleanSearchBodyAndApply === "function") {
+      await waitForCleanSearchBodyAndApply();
     }
+    await backgroundImageReady;
   } catch (error) {
     console.error("BiliFocus prepaint initialization failed:", error);
     try {

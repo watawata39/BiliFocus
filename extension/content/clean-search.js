@@ -482,13 +482,13 @@ function applyCleanSearchBackgroundVars() {
 
   if (cleanSearchBackgroundState.type === "upload" && cleanSearchUploadedWallpaper) {
     root.style.setProperty("--bili-focus-clean-bg-image", `url("${cleanSearchUploadedWallpaper}")`);
-    root.style.setProperty("--bili-focus-clean-bg-color", CLEAN_SEARCH_DEFAULT_COLOR);
+    root.style.removeProperty("--bili-focus-clean-bg-color");
     return;
   }
 
   const id = cleanSearchBackgroundState.type === "wallpaper" ? cleanSearchBackgroundState.id : CLEAN_SEARCH_DEFAULT_BACKGROUND.id;
   root.style.setProperty("--bili-focus-clean-bg-image", `url("${getCleanSearchWallpaperUrl(id)}")`);
-  root.style.setProperty("--bili-focus-clean-bg-color", CLEAN_SEARCH_DEFAULT_COLOR);
+  root.style.removeProperty("--bili-focus-clean-bg-color");
 }
 
 function waitForCleanSearchBackgroundImage(timeoutMs = 500) {
@@ -520,6 +520,33 @@ function waitForCleanSearchBackgroundImage(timeoutMs = 500) {
     image.src = source;
     if (canDecode) {
       image.decode().then(finish, finish);
+    }
+  });
+}
+
+function waitForCleanSearchBodyAndApply() {
+  if (!isCleanSearchActive()) return Promise.resolve();
+
+  const applyWhenReady = () => {
+    if (!isCleanSearchActive()) return true;
+    if (!document.body) return false;
+    applyCleanSearchMode();
+    return true;
+  };
+
+  if (applyWhenReady()) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    const observer = new MutationObserver(() => {
+      if (!applyWhenReady()) return;
+      observer.disconnect();
+      resolve();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+
+    if (applyWhenReady()) {
+      observer.disconnect();
+      resolve();
     }
   });
 }
@@ -1338,7 +1365,7 @@ function getCleanSearchModeStyle() {
     .bili-focus-clean-search-mode body {
       min-height: 100vh !important;
       overflow-x: hidden !important;
-      background-color: var(--bili-focus-clean-bg-color, #f6f8fb) !important;
+      background-color: var(--bili-focus-clean-bg-color, var(--bili-focus-prepaint-bg, #f6f8fb)) !important;
       background-image: none !important;
     }
 
@@ -1348,7 +1375,7 @@ function getCleanSearchModeStyle() {
       right: var(--bili-focus-clean-stage-right) !important;
       bottom: 0 !important;
       left: 0 !important;
-      background-color: var(--bili-focus-clean-bg-color, #f6f8fb) !important;
+      background-color: var(--bili-focus-clean-bg-color, var(--bili-focus-prepaint-bg, #f6f8fb)) !important;
       background-image: var(--bili-focus-clean-bg-image, none) !important;
       background-position: center center !important;
       background-repeat: no-repeat !important;

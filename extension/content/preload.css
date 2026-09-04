@@ -1,5 +1,9 @@
+html {
+  --bili-focus-prepaint-bg: #f5f6f7;
+}
+
 html[data-bili-focus-preparing] {
-  background-color: #f5f6f7 !important;
+  background-color: var(--bili-focus-prepaint-bg) !important;
 }
 
 html[data-bili-focus-preparing] > body {
@@ -9,7 +13,7 @@ html[data-bili-focus-preparing] > body {
 }
 
 @media (prefers-color-scheme: dark) {
-  html[data-bili-focus-preparing] {
-    background-color: #18191c !important;
+  html {
+    --bili-focus-prepaint-bg: #18191c;
   }
 }

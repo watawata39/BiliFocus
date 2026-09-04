@@ -1,5 +1,13 @@
 [
   {
+    "date": "2026-09-05",
+    "version": "2.3.1",
+    "changes": [
+      "修复了清爽搜索模式下搜索栏出现后仍可能短暂显示白色背景的问题"
+    ],
+    "details": "Clean Search Mode now begins preloading the selected wallpaper as soon as its critical styles are applied, waits only for the document body instead of DOMContentLoaded, and inserts the wallpaper layer before removing the preload curtain. Wallpaper and uploaded-image backgrounds also retain the browser-matched neutral light or dark color behind the image, preventing a white frame if decoding exceeds the preload limit or fails. These changes prevent Bilibili's default white background from appearing between the search bar and the rest of the Clean Search interface without making Bilibili's remaining network resources part of the startup path."
+  },
+  {
     "date": "2026-09-04",
     "version": "2.3.0",
     "changes": [
