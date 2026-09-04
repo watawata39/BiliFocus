@@ -362,14 +362,102 @@ const MIN_DELAY = 100;
 let is_first_personal_page_check = true;
 let lastHideElementsTime = 0; // limit the number of calls of hideElements
 const HIDE_ELEMENTS_MIN_DELAY = 50;
-function initialLogicBody() {
-  chrome.storage.local.get([...Object.keys(settings), "language", ...CLEAN_SEARCH_BACKGROUND_STORAGE_KEYS, CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY], function(result) {
-    Object.keys(settings).forEach(key => {
-      settings[key] = result[key] !== undefined ? result[key] : settings[key];
-    });
+let biliFocusInitialStateReady = Promise.resolve();
+
+function getBiliFocusStoredValues(keys) {
+  return new Promise((resolve) => {
+    try {
+      chrome.storage.local.get(keys, (result) => {
+        if (chrome.runtime.lastError) {
+          console.warn("BiliFocus could not load deferred settings:", chrome.runtime.lastError.message);
+          resolve({});
+          return;
+        }
+        resolve(result || {});
+      });
+    } catch (error) {
+      console.warn("BiliFocus could not request deferred settings:", error);
+      resolve({});
+    }
+  });
+}
+
+function applyStoredMainSettings(result) {
+  Object.keys(settings).forEach((key) => {
+    settings[key] = result[key] !== undefined ? result[key] : settings[key];
+  });
+  updateCleanSearchLanguage(result.language);
+}
+
+async function loadInitialCleanSearchBackground(result) {
+  if (!isCleanSearchActive()) return;
+
+  const background = normalizeCleanSearchBackground(result.cleansearchbackground);
+  let backgroundSettings = result;
+  if (background.type === "upload") {
+    const uploadedSettings = await getBiliFocusStoredValues([
+      "cleansearchuploadedwallpaper",
+      "cleansearchuploadedforegroundcache",
+    ]);
+    backgroundSettings = { ...result, ...uploadedSettings };
+  }
+  loadCleanSearchBackgroundSettings(backgroundSettings);
+}
+
+function loadDeferredCleanSearchSettings() {
+  getBiliFocusStoredValues([
+    ...CLEAN_SEARCH_BACKGROUND_STORAGE_KEYS,
+    CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY,
+  ]).then((result) => {
     loadCleanSearchBackgroundSettings(result);
     loadCleanSearchRightPopoverCache(result);
-    updateCleanSearchLanguage(result.language);
+    applyCleanSearchMode();
+  });
+}
+
+async function initializeBiliFocusBeforeFirstPaint() {
+  const bootstrap = globalThis.biliFocusBootstrap;
+  const initialSettings = bootstrap && bootstrap.settingsReady
+    ? bootstrap.settingsReady
+    : getBiliFocusStoredValues([
+        ...Object.keys(settings),
+        "language",
+        "cleansearchbackground",
+        "keywordblockrules",
+      ]);
+
+  try {
+    const result = await initialSettings;
+    applyStoredMainSettings(result);
+    await loadInitialCleanSearchBackground(result);
+    if (globalThis.biliFocusKeywordBlockingReady) {
+      await globalThis.biliFocusKeywordBlockingReady;
+    }
+    hideElements(true);
+    if (typeof applyKeywordBlocking === "function") applyKeywordBlocking();
+    if (typeof waitForCleanSearchBackgroundImage === "function") {
+      await waitForCleanSearchBackgroundImage();
+    }
+  } catch (error) {
+    console.error("BiliFocus prepaint initialization failed:", error);
+    try {
+      hideElements(true);
+    } catch (fallbackError) {
+      console.error("BiliFocus fallback initialization failed:", fallbackError);
+    }
+  } finally {
+    if (bootstrap && typeof bootstrap.revealPage === "function") {
+      bootstrap.revealPage();
+    } else {
+      document.documentElement.removeAttribute("data-bili-focus-preparing");
+    }
+  }
+
+  loadDeferredCleanSearchSettings();
+}
+
+function initialLogicBody() {
+  biliFocusInitialStateReady.then(() => {
     // Execute code after retrieving data
     function runMainCode(check = true) {
       const currentTime = Date.now();
@@ -487,23 +575,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// main initilizing logic would execute after DOM fully loads, however, 
-// calling hideElements to inject critical CSS right away. 
-// This is to prevent contents from "flashing" before being hidden.
+// Install critical CSS before releasing the preload curtain, then initialize
+// DOM observers once the document body is available.
+biliFocusInitialStateReady = initializeBiliFocusBeforeFirstPaint();
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initialLogicBody);
 } else {
   initialLogicBody();
 }
-chrome.storage.local.get([...Object.keys(settings), "language", ...CLEAN_SEARCH_BACKGROUND_STORAGE_KEYS, CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY], function(result) {
-  Object.keys(settings).forEach(key => {
-    settings[key] = result[key] !== undefined ? result[key] : settings[key];
-  });
-  loadCleanSearchBackgroundSettings(result);
-  loadCleanSearchRightPopoverCache(result);
-  updateCleanSearchLanguage(result.language);
-  hideElements(true);
-});
 
 // following code is to implement the "/" shortcut to focus search bar
 let enableSlashFocus = true;

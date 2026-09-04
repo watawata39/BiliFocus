@@ -1,0 +1,15 @@
+html[data-bili-focus-preparing] {
+  background-color: #f5f6f7 !important;
+}
+
+html[data-bili-focus-preparing] > body {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-bili-focus-preparing] {
+    background-color: #18191c !important;
+  }
+}

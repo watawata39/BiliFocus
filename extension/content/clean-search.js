@@ -491,6 +491,39 @@ function applyCleanSearchBackgroundVars() {
   root.style.setProperty("--bili-focus-clean-bg-color", CLEAN_SEARCH_DEFAULT_COLOR);
 }
 
+function waitForCleanSearchBackgroundImage(timeoutMs = 500) {
+  if (!isCleanSearchActive() || cleanSearchBackgroundState.type === "color") {
+    return Promise.resolve();
+  }
+
+  const source = cleanSearchBackgroundState.type === "upload"
+    ? cleanSearchUploadedWallpaper
+    : getCleanSearchWallpaperUrl(cleanSearchBackgroundState.id || CLEAN_SEARCH_DEFAULT_BACKGROUND.id);
+  if (!source) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let timeout = 0;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      resolve();
+    };
+    const image = new Image();
+    const canDecode = typeof image.decode === "function";
+    if (!canDecode) {
+      image.addEventListener("load", finish, { once: true });
+      image.addEventListener("error", finish, { once: true });
+    }
+    timeout = setTimeout(finish, timeoutMs);
+    image.src = source;
+    if (canDecode) {
+      image.decode().then(finish, finish);
+    }
+  });
+}
+
 function updateCleanSearchForegroundTheme() {
   if (!isCleanSearchActive()) {
     clearCleanSearchForegroundAttributes();

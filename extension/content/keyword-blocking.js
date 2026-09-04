@@ -916,11 +916,12 @@ function scheduleKeywordBlockingScan() {
 }
 
 function startKeywordBlockingObserver() {
-  if (!document.body || keywordBlockingObserver) return;
+  const target = document.body || document.documentElement;
+  if (!target || keywordBlockingObserver) return;
   keywordBlockingObserver = new MutationObserver(() => {
     scheduleKeywordBlockingScan();
   });
-  keywordBlockingObserver.observe(document.body, {
+  keywordBlockingObserver.observe(target, {
     childList: true,
     subtree: true,
     attributes: true,
@@ -1228,21 +1229,32 @@ function openKeywordBlockingPanel() {
   input.focus();
 }
 
+function getInitialKeywordBlockingSettings() {
+  const bootstrap = globalThis.biliFocusBootstrap;
+  if (bootstrap && bootstrap.settingsReady) return bootstrap.settingsReady;
+
+  return new Promise((resolve) => {
+    chrome.storage.local.get([KEYWORD_BLOCKING_STORAGE_KEY, "language"], (result) => {
+      if (chrome.runtime.lastError) {
+        console.warn("BiliFocus could not load keyword blocking settings:", chrome.runtime.lastError.message);
+        resolve({});
+        return;
+      }
+      resolve(result || {});
+    });
+  });
+}
+
 function initializeKeywordBlocking() {
   installKeywordBlockingStyles();
-  chrome.storage.local.get([KEYWORD_BLOCKING_STORAGE_KEY, "language"], (result) => {
+  const settingsReady = getInitialKeywordBlockingSettings().then((result) => {
     keywordBlockingLanguage = getKeywordBlockingLanguage(result.language);
     setKeywordBlockingRules(result[KEYWORD_BLOCKING_STORAGE_KEY], false);
+    applyKeywordBlocking();
+    startKeywordBlockingObserver();
   });
 
-  const startWhenReady = () => {
-    startKeywordBlockingObserver();
-  };
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", startWhenReady, { once: true });
-  } else {
-    startWhenReady();
-  }
+  return settingsReady;
 }
 
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
@@ -1264,4 +1276,4 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-initializeKeywordBlocking();
+globalThis.biliFocusKeywordBlockingReady = initializeKeywordBlocking();

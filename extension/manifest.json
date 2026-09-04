@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "2.2.4",
+  "version": "2.3.0",
   "description": "__MSG_extDesc__",
   "default_locale": "zh_CN",
   "permissions": ["storage"],
@@ -11,7 +11,8 @@
   "content_scripts": [
     {
       "matches": ["*://*.bilibili.com/*"],
-      "js": ["content/clean-search.js", "content/keyword-blocking.js", "content/main.js"],
+      "css": ["content/preload.css"],
+      "js": ["content/bootstrap.js", "content/clean-search.js", "content/keyword-blocking.js", "content/main.js"],
       "run_at": "document_start"
     }
   ],
