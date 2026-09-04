@@ -3,14 +3,9 @@
     "date": "2026-09-04",
     "version": "2.3.0",
     "changes": [
-      "Eliminated the page-load flash (most noticable in Firefox due to its page loading flow) by adding a manifest-declared prepaint stylesheet that keeps Bilibili's original page content hidden until BiliFocus has applied the user's saved settings.",
-      "Added a lightweight document-start bootstrap that immediately displays a neutral loading background matched to the browser's light or dark color scheme.",
-      "Added a two-second fail-safe that reveals the page if startup initialization or storage access fails, preventing the page from remaining hidden indefinitely.",
-      "Consolidated the initial settings read so visibility controls, Clean Search Mode, language, the selected Clean Search background, and video-card blocking rules are available before the first visible render.",
-      "Deferred inactive wallpaper data and right-navigation dropdown cache loading until after the first render, while preserving immediate loading for an uploaded wallpaper that is actively used by Clean Search Mode.",
-      "Added preloading and decoding of the active Clean Search wallpaper for up to 500 milliseconds before revealing the page, reducing background flashes during startup.",
-      "Updated video-card blocking initialization to reuse the shared startup settings and observe from the document root, allowing matching cards created early in page loading to be blocked before the page is revealed."
-    ]
+      "修复了页面加载时原始内容在扩展设置生效前短暂闪现的问题"
+    ],
+    "details": "Eliminated the page-load flash, which was most noticeable in Firefox due to its page-loading flow, by adding a manifest-declared prepaint stylesheet that keeps Bilibili's original page content hidden until BiliFocus has applied the user's saved settings. Added a lightweight document-start bootstrap that immediately displays a neutral loading background matched to the browser's light or dark color scheme. Added a two-second fail-safe that reveals the page if startup initialization or storage access fails, preventing the page from remaining hidden indefinitely. Consolidated the initial settings read so visibility controls, Clean Search Mode, language, the selected Clean Search background, and video-card blocking rules are available before the first visible render. Deferred inactive wallpaper data and right-navigation dropdown cache loading until after the first render, while preserving immediate loading for an uploaded wallpaper that is actively used by Clean Search Mode. Added preloading and decoding of the active Clean Search wallpaper for up to 500 milliseconds before revealing the page, reducing background flashes during startup. Updated video-card blocking initialization to reuse the shared startup settings and observe from the document root, allowing matching cards created early in page loading to be blocked before the page is revealed."
   },
   {
     "date": "2026-7-27",
