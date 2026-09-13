@@ -3,8 +3,7 @@
     "date": "2026-09-11",
     "version": "2.3.3",
     "changes": [
-      "适配新版导航栏，修复清爽搜索模式下首页横幅及已选择屏蔽的导航图标仍然显示的问题",
-      "兼容新版导航栏的头像位置、下拉菜单和导航栏屏蔽设置，同时保留旧版页面的处理方式"
+      "添加了新版UI的兼容(目前仅影响部分用户)"
     ],
     "details": "Added compatibility for Bilibili's bili-header--large header and the right-entry__main / left-entry-main navigation wrappers observed in September 2026. Existing header selectors remain in place. New selectors are scoped to the new wrappers and identify navigation roles without depending on VIP being present. Clean Search banner hiding, navigation visibility, avatar positioning, foreground styling, and dropdown handling now support the new structure. Dropdown offset caches are separated by header structure while legacy cache keys remain unchanged. Source comments and docs/header-compatibility.md document the compatibility assumptions and regression checks."
   },
