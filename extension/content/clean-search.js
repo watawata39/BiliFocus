@@ -3,6 +3,35 @@
 
 
 const CLEAN_SEARCH_LOCKED_SETTINGS = ["homepagerecom", "searchrecom", "ads"];
+// BiliFocus 2.3.3 (2026-09-11): Bilibili's newer header puts navigation items
+// inside .right-entry__main / .left-entry-main. Keep the legacy selectors below
+// unchanged and add selectors scoped to these wrappers. Named roles also avoid
+// shifting settings when the overseas header omits VIP. Logged-out triggers use
+// data-idx instead; :is() keeps unsupported :has() branches from invalidating
+// the legacy rules in older browsers. See docs/header-compatibility.md.
+const BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS = {
+  membership: ".right-entry > .right-entry__main > .vip-entry",
+  messages: '.right-entry > .right-entry__main > :is(.message-entry, :has(> [data-idx="message"]))',
+  dongtai: '.right-entry > .right-entry__main > :is(.dynamic-entry, :has(> [data-idx="dynamic"]))',
+  favourites: '.right-entry > .right-entry__main > :is(.favorite-entry, :has(> [data-idx="fav"]))',
+  history: '.right-entry > .right-entry__main > :is(.history-entry, :has(> [data-idx="history"]))',
+  creator: '.right-entry > .right-entry__main > :is(:has(> a[href*="//member.bilibili.com/platform/home"]), :has(> [data-idx="creation"]))',
+  upload: ".right-entry > .right-entry__main > .upload-entry",
+};
+const BILI_FOCUS_WRAPPED_RIGHT_NAV_SETTINGS = {
+  membership: [BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS.membership],
+  messages: [BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS.messages],
+  dongtai: [BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS.dongtai],
+  favourites: [BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS.favourites],
+  history: [BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS.history],
+  tougao: [BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS.creator, BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS.upload],
+};
+
+function getBiliFocusNavItemsContainer(nav) {
+  if (!nav) return null;
+  return nav.querySelector(":scope > .right-entry__main, :scope > .left-entry-main") || nav;
+}
+
 const CLEAN_SEARCH_RIGHT_NAV_SELECTORS = {
   membership: ".bili-focus-clean-search-mode .right-entry > .vip-wrap,.bili-focus-clean-search-mode .right-entry > :nth-child(2)",
   messages: ".bili-focus-clean-search-mode .right-entry > :nth-child(3)",
@@ -11,6 +40,10 @@ const CLEAN_SEARCH_RIGHT_NAV_SELECTORS = {
   history: ".bili-focus-clean-search-mode .right-entry > :nth-child(6)",
   tougao: ".bili-focus-clean-search-mode .right-entry > :nth-child(7),.bili-focus-clean-search-mode .right-entry > :nth-child(8),.bili-focus-clean-search-mode .right-entry .header-upload-entry",
 };
+Object.entries(BILI_FOCUS_WRAPPED_RIGHT_NAV_SETTINGS).forEach(([key, selectors]) => {
+  CLEAN_SEARCH_RIGHT_NAV_SELECTORS[key] += "," + selectors
+    .map((selector) => `.bili-focus-clean-search-mode ${selector}`).join(",");
+});
 const CLEAN_SEARCH_RIGHT_NAV_LAYOUT_ITEMS = [
   {
     key: "membership",
@@ -657,7 +690,8 @@ function sampleCleanSearchForegroundThemeFromImage(image) {
 }
 
 function getVisibleCleanSearchNavChildRects(selector) {
-  const nav = document.querySelector(selector);
+  // 2.3.3: sample the actual items, not the new display:contents wrapper.
+  const nav = getBiliFocusNavItemsContainer(document.querySelector(selector));
   if (!nav) return [];
   return Array.from(nav.children)
     .filter((child) => {
@@ -1393,6 +1427,8 @@ function getCleanSearchModeStyle() {
 
     .bili-focus-clean-search-mode #app > .bili-feed4 > :not(.bili-header),
     .bili-focus-clean-search-mode .bili-header.large-header > :not(.bili-header__bar),
+    /* 2.3.3: add the renamed large header without changing the legacy rule. */
+    .bili-focus-clean-search-mode .bili-header.bili-header--large > :not(.bili-header__bar),
     .bili-focus-clean-search-mode .bili-header__bar > ${hiddenHeaderChildrenSelector},
     .bili-focus-clean-search-mode .bili-feed4-layout,
     .bili-focus-clean-search-mode .bili-header__channel,
@@ -1405,7 +1441,8 @@ function getCleanSearchModeStyle() {
       display: none !important;
     }
 
-    .bili-focus-clean-search-mode .bili-header.large-header {
+    .bili-focus-clean-search-mode .bili-header.large-header,
+    .bili-focus-clean-search-mode .bili-header.bili-header--large {
       min-height: 100vh !important;
       height: 100vh !important;
       background: transparent !important;
@@ -1721,12 +1758,20 @@ function getCleanSearchModeStyle() {
       transition: opacity 120ms ease !important;
     }
 
-    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > * {
+    /* 2.3.3: flatten only the new wrappers for the existing flex layout. */
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > .left-entry-main {
+      display: contents !important;
+    }
+
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > *,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > .left-entry-main > * {
       margin: 0 !important;
       flex: 0 0 auto !important;
     }
 
-    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li {
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > .left-entry-main > .left-entry__item {
       height: 34px !important;
       min-height: 34px !important;
       display: flex !important;
@@ -1734,7 +1779,8 @@ function getCleanSearchModeStyle() {
       line-height: 18px !important;
     }
 
-    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a {
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > .left-entry-main .left-entry__item-trigger {
       height: 34px !important;
       min-height: 34px !important;
       padding: 0 !important;
@@ -1747,14 +1793,18 @@ function getCleanSearchModeStyle() {
 
     .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a,
     .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > span,
-    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > div {
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > div,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > .left-entry-main .left-entry__item-trigger,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > .left-entry-main .left-entry__item-trigger > .trigger-text {
       color: var(--bili-focus-clean-left-nav-color) !important;
       min-height: 0 !important;
       line-height: 18px !important;
     }
 
     .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > svg,
-    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > svg * {
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > li > a > svg *,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > .left-entry-main .left-entry__item-trigger > svg,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .left-entry > .left-entry-main .left-entry__item-trigger > svg * {
       color: var(--bili-focus-clean-left-nav-color) !important;
     }
 
@@ -1790,7 +1840,8 @@ function getCleanSearchModeStyle() {
       justify-content: flex-end !important;
     }
 
-    .bili-focus-clean-search-mode .right-entry > * {
+    .bili-focus-clean-search-mode .right-entry > *,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main > * {
       margin: 0 !important;
       flex: 0 0 auto !important;
     }
@@ -1798,7 +1849,9 @@ function getCleanSearchModeStyle() {
     .bili-focus-clean-search-mode ul.right-entry > div.vip-wrap > li.v-popover-wrap > a,
     .bili-focus-clean-search-mode ul.right-entry > li.v-popover-wrap:not(.header-avatar-wrap) > a,
     .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item > a,
-    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload > li.v-popover-wrap > a {
+    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload > li.v-popover-wrap > a,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main .right-entry__item-trigger,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main > .upload-entry .upload-entry__trigger {
       color: var(--bili-focus-clean-right-nav-color) !important;
     }
 
@@ -1809,15 +1862,21 @@ function getCleanSearchModeStyle() {
     .bili-focus-clean-search-mode ul.right-entry > div.vip-wrap > li.v-popover-wrap > a .right-entry-text,
     .bili-focus-clean-search-mode ul.right-entry > li.v-popover-wrap:not(.header-avatar-wrap) > a .right-entry-text,
     .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item > a .right-entry-text,
-    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload > li.v-popover-wrap > a .header-upload-entry__text {
+    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload > li.v-popover-wrap > a .header-upload-entry__text,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main .right-entry__item-trigger .trigger-icon,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main .right-entry__item-trigger .trigger-text,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main > .upload-entry .upload-entry__trigger .trigger-icon,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main > .upload-entry .upload-entry__trigger .trigger-text {
       color: currentColor !important;
     }
 
-    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload > li.v-popover-wrap > a {
+    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload > li.v-popover-wrap > a,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main > .upload-entry > a {
       text-decoration: none !important;
     }
 
-    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload .header-upload-entry {
+    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload .header-upload-entry,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main > .upload-entry .upload-entry__trigger {
       min-width: 70px !important;
       height: 34px !important;
       padding: 0 13px !important;
@@ -1834,18 +1893,21 @@ function getCleanSearchModeStyle() {
       transition: border-color 160ms ease, color 160ms ease !important;
     }
 
-    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload .header-upload-entry__icon {
+    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload .header-upload-entry__icon,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main > .upload-entry .upload-entry__trigger .trigger-icon {
       width: 17px !important;
       height: 17px !important;
       flex: 0 0 auto !important;
     }
 
-    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload .header-upload-entry__text {
+    .bili-focus-clean-search-mode ul.right-entry > li.right-entry-item--upload .header-upload-entry__text,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main > .upload-entry .upload-entry__trigger .trigger-text {
       color: currentColor !important;
       font-weight: 500 !important;
     }
 
-    .bili-focus-clean-search-mode .right-entry > .header-avatar-wrap {
+    .bili-focus-clean-search-mode .right-entry > .header-avatar-wrap,
+    .bili-focus-clean-search-mode .right-entry > .right-entry__main > .header-avatar-wrap {
       order: 99 !important;
       margin-left: auto !important;
       visibility: visible !important;
@@ -1853,7 +1915,8 @@ function getCleanSearchModeStyle() {
       display: flex !important;
     }
 
-    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .right-entry > .header-avatar-wrap {
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .right-entry > .header-avatar-wrap,
+    .bili-focus-clean-search-mode.bili-focus-clean-right-nav-right .right-entry > .right-entry__main > .header-avatar-wrap {
       order: 99 !important;
       margin-left: 0 !important;
     }
@@ -2505,7 +2568,11 @@ function getCleanSearchRightPopoverLayoutKey() {
 }
 
 function getCleanSearchRightPopoverCacheKey(item) {
-  return [
+  // 2.3.3: never reuse a legacy header's cached dropdown offset for the new
+  // markup. Legacy keys remain byte-for-byte unchanged.
+  const nav = getBiliFocusNavItemsContainer(document.querySelector(".bili-focus-clean-search-mode .right-entry"));
+  const headerPrefix = nav && nav.classList.contains("right-entry__main") ? "wrapped-header;" : "";
+  return headerPrefix + [
     item.key,
     `left=${getCleanSearchRightPopoverLeftSignature(item.key)}`,
     getCleanSearchRightPopoverLayoutKey(),
@@ -2515,10 +2582,24 @@ function getCleanSearchRightPopoverCacheKey(item) {
 function getCleanSearchRightPopoverItemDefinition(element) {
   const rightEntry = document.querySelector(".bili-focus-clean-search-mode .right-entry");
   if (!rightEntry || !(element instanceof Element)) return null;
-  const child = element.closest(".right-entry > *");
-  if (!child || child.parentElement !== rightEntry) return null;
-  const childIndex = Array.prototype.indexOf.call(rightEntry.children, child) + 1;
+  const container = getBiliFocusNavItemsContainer(rightEntry);
+  const child = getCleanSearchRightNavItem(element);
+  if (!child || child.parentElement !== container) return null;
+  if (container !== rightEntry) {
+    return CLEAN_SEARCH_RIGHT_POPOVER_CACHE_ITEMS.find((item) => child.matches(BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS[item.key])) || null;
+  }
+  const childIndex = Array.prototype.indexOf.call(container.children, child) + 1;
   return CLEAN_SEARCH_RIGHT_POPOVER_CACHE_ITEMS.find((item) => item.childIndex === childIndex) || null;
+}
+
+// 2.3.3: the new upload entry is itself the popover wrapper. Membership still
+// has an inner wrapper. Select one header variant so old dropdown CSS and its
+// specificity remain unchanged, and never apply unscoped comma-list branches.
+function getCleanSearchRightPopoverDropdownSelector(item) {
+  const rightEntry = document.querySelector(".bili-focus-clean-search-mode .right-entry");
+  if (!rightEntry || getBiliFocusNavItemsContainer(rightEntry) === rightEntry) return item.dropdownSelector;
+  const innerWrapper = item.key === "membership" ? " > .v-popover-wrap" : "";
+  return `${BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS[item.key]}${innerWrapper} > .v-popover:not(.v-popover-wrap)`;
 }
 
 function normalizeCleanSearchRightPopoverCache(value) {
@@ -2582,7 +2663,7 @@ function getCleanSearchRightPopoverCacheStyle() {
     const entry = cleanSearchRightPopoverCache[cacheKey];
     if (!entry || entry.shiftX === 0) return;
     rules.push(`
-      .bili-focus-clean-search-mode.bili-focus-clean-right-nav-left ${item.dropdownSelector} {
+      .bili-focus-clean-search-mode.bili-focus-clean-right-nav-left ${getCleanSearchRightPopoverDropdownSelector(item)} {
         margin-left: ${getCleanSearchClampedMargin(entry.originalMargin, entry.shiftX)} !important;
       }
     `);
@@ -2793,7 +2874,11 @@ function getCleanSearchRightNavItem(target) {
   if (!(target instanceof Element)) return null;
   const rightEntry = document.querySelector(".bili-focus-clean-search-mode .right-entry");
   if (!rightEntry) return null;
-  const item = target.closest(".right-entry > *");
+  const container = getBiliFocusNavItemsContainer(rightEntry);
+  // 2.3.3: resolve the actual item, not .right-entry__main, when hovering or
+  // focusing links, icons, or a nested dropdown. Do not mutate Bilibili's DOM.
+  let item = target;
+  while (item && item.parentElement !== container) item = item.parentElement;
   return item && rightEntry.contains(item) ? item : null;
 }
 
@@ -2832,7 +2917,8 @@ function closeCleanSearchRightPopoversForNormalMode() {
   cleanSearchRightPopoverHoveredItem = null;
 
   if (rightEntry) {
-    const exitTargets = new Set([rightEntry, ...Array.from(rightEntry.children)]);
+    const container = getBiliFocusNavItemsContainer(rightEntry);
+    const exitTargets = new Set([rightEntry, ...Array.from(rightEntry.children), ...Array.from(container.children)]);
     rightEntry.querySelectorAll(".v-popover-wrap, .right-entry-item, a, button, li").forEach((element) => {
       exitTargets.add(element);
     });

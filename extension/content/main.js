@@ -115,6 +115,9 @@ function clean_navigation_bar(shouldHide = true) {
                         document.querySelector(".nav-link-ul.mini")];    // as of now, only aware of usage in https://live.bilibili.com/p/html/live-fansmedal-wall/#/view-medal
 
   for (let target_entry of target_entries) {
+    // BiliFocus 2.3.3: the new header's direct child is .left-entry-main;
+    // enumerate its entries while leaving legacy containers unchanged.
+    target_entry = getBiliFocusNavItemsContainer(target_entry);
     if (target_entry) {
       let is_first = true;
       Array.from(target_entry.children).forEach((target) => {
@@ -252,6 +255,17 @@ const modifications = {
   // No selectors here. Clean Search uses this to decide whether right-navi items are moved to the left; when they are, clean-search.css hides the left navi on the main page without changing the leftnavi preference.
   cleansearchrightnavleft: [],
 };
+
+// BiliFocus 2.3.3 (2026-09-11): reuse the new-header role selectors from
+// clean-search.js in normal mode too. Preserve visibility-only hiding here;
+// Clean Search separately collapses hidden items with display:none.
+Object.entries(BILI_FOCUS_WRAPPED_RIGHT_NAV_SETTINGS).forEach(([key, selectors]) => {
+  modifications[key].push(["styles2", selectors.join(",") + ","]);
+});
+modifications.leftnavi.push(["styles2",
+  ".left-entry > .left-entry-main > :not(:first-child)," +
+  ".left-entry > .left-entry-main > .home-page-entry > .v-popover:not(.v-popover-wrap),"
+]);
 
 
 // this is the core function to hiding the sections
@@ -502,7 +516,8 @@ function initialLogicBody() {
         return;
       }
       
-      const mutation_targets = ["left-entry", "bili-header", "bili-header__bar", "mini-header", "right-entry", "vip-wrap", "vip-popover-wrap", "nav-link", "nav-link-ul"];
+      // 2.3.3: also handle items inserted/replaced inside the new wrappers.
+      const mutation_targets = ["left-entry", "left-entry-main", "bili-header", "bili-header__bar", "mini-header", "right-entry", "right-entry__main", "vip-wrap", "vip-popover-wrap", "nav-link", "nav-link-ul"];
       mutations.forEach((mutation) => {
         if (is_first_personal_page_check && mutation.target.classList.contains("section-title")) {
           is_first_personal_page_check = false;
