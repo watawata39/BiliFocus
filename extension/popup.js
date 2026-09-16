@@ -70,30 +70,13 @@ async function applyLanguage(lang) {
   document.getElementById('recentlikes-text').textContent = getMessage(content, 'recentlikes');
   document.getElementById('usrpageleftsidebar-text').textContent = getMessage(content, 'usrpageleftsidebar');
   document.getElementById('feedback-text').textContent = getMessage(content, 'feedback');
+  document.getElementById('support-text').textContent = getMessage(content, 'support');
   document.getElementById('modal-text').textContent = getMessage(content, 'modalText');
-
-  const settingsMainTitle = document.getElementById('settings-main-title');
-  if (settingsMainTitle) settingsMainTitle.textContent = getMessage(content, 'settingsMainTitle');
-  document.getElementById('language-title').textContent = getMessage(content, 'settingsTitle');
-  const cleanSearchSettingsTitle = document.getElementById('clean-search-settings-title');
-  if (cleanSearchSettingsTitle) cleanSearchSettingsTitle.textContent = getMessage(content, 'cleanSearchModeLabel');
-  const cleanSearchRightNavLeftText = document.getElementById('cleansearchrightnavleft-text');
-  if (cleanSearchRightNavLeftText) cleanSearchRightNavLeftText.textContent = getMessage(content, 'cleanSearchRightNavLeft');
-  const cleanSearchRightNavLeftNote = document.getElementById('cleansearchrightnavleft-note');
-  if (cleanSearchRightNavLeftNote) cleanSearchRightNavLeftNote.textContent = getMessage(content, 'cleanSearchRightNavLeftNote');
-  const slashText = document.getElementById('slashfocus-text');
-  if (slashText) slashText.textContent = getMessage(content, 'slashfocus');
-  const behaviorTitle = document.getElementById('behavior-title');
-  if (behaviorTitle) behaviorTitle.textContent = getMessage(content, 'behaviorTitle');
 
   const settingsBtn = document.getElementById('settings-btn');
   if (settingsBtn) settingsBtn.title = getMessage(content, 'settingsBtnTitle');
   const cleanSearchBtn = document.getElementById('clean-search-btn');
   if (cleanSearchBtn) cleanSearchBtn.title = getMessage(content, 'cleanSearchModeTitle');
-  const keywordBlockingBtn = document.getElementById('keyword-blocking-btn');
-  if (keywordBlockingBtn) keywordBlockingBtn.title = getMessage(content, 'keywordBlockingTitle');
-  const keywordBlockingBtnText = document.getElementById('keyword-blocking-btn-text');
-  if (keywordBlockingBtnText) keywordBlockingBtnText.textContent = getMessage(content, 'keywordBlockingLabel');
   const choicesMenuBtn = document.getElementById('choices-menu-btn');
   if (choicesMenuBtn) choicesMenuBtn.title = getMessage(content, 'moreOptionsTitle');
   const selectAllBtn = document.getElementById('select-all-btn');
@@ -103,24 +86,9 @@ async function applyLanguage(lang) {
 
   const modalCloseBtn = document.getElementById('modal-close-btn');
   if (modalCloseBtn) modalCloseBtn.textContent = getMessage(content, 'modalCloseBtn');
-  const settingsCloseBtn = document.getElementById('settings-close-btn');
-  if (settingsCloseBtn) settingsCloseBtn.textContent = getMessage(content, 'settingsCloseBtn');
-
-  // Update language option labels in settings
-  const langLabels = document.querySelectorAll('#language-options label');
-  const langKeys = ['languageZh', 'languageEn', 'languageJa'];
-  langLabels.forEach((label, i) => {
-    const input = label.querySelector('input[name="language"]');
-    if (input) {
-      const text = getMessage(content, langKeys[i]);
-      label.replaceChildren(input, ' ', document.createTextNode(text));
-    }
-  });
-
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja' : 'en';
   updateCleanSearchButtonText();
   updateCleanSearchLockText();
-  chrome.storage.local.set({ language: lang });
 }
 
 function updateCleanSearchButtonText() {
@@ -159,67 +127,14 @@ function updateCleanSearchLockText() {
 }
 
 function setupLanguageSwitching() {
-  chrome.storage.local.get(['language', 'slashfocus', 'cleansearchrightnavleft'], async function(result) {
-    const savedLanguage = supportedLangs.includes(result.language) ? result.language : 'en';
-    await applyLanguage(savedLanguage);
-
-    const slashToggle = document.getElementById('slashfocus-toggle');
-    if (slashToggle) {
-      const enabled = result.slashfocus !== undefined ? !!result.slashfocus : true;
-      slashToggle.checked = enabled;
-    }
-
-    const rightNavLeftToggle = document.getElementById('cleansearchrightnavleft-toggle');
-    if (rightNavLeftToggle) {
-      const enabled = result.cleansearchrightnavleft !== undefined ? !!result.cleansearchrightnavleft : true;
-      rightNavLeftToggle.checked = enabled;
-      if (result.cleansearchrightnavleft === undefined) {
-        chrome.storage.local.set({ cleansearchrightnavleft: true });
-      }
-    }
+  chrome.storage.local.get("language", result => applyLanguage(supportedLangs.includes(result.language) ? result.language : "en"));
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.language) applyLanguage(supportedLangs.includes(changes.language.newValue) ? changes.language.newValue : "en");
   });
-
-  const settingsBtn = document.getElementById('settings-btn');
-  const settingsOverlay = document.getElementById('settings-overlay');
-  const settingsCloseBtn = document.getElementById('settings-close-btn');
-  const languageRadios = document.querySelectorAll('input[name="language"]');
-  const slashToggle = document.getElementById('slashfocus-toggle');
-
-  if (!settingsBtn || !settingsOverlay || !settingsCloseBtn || !languageRadios.length || !slashToggle) {
-    return;
-  }
-
-  function openSettings() {
-    const currentRadio = document.querySelector(`input[name="language"][value="${currentLanguage}"]`);
-    if (currentRadio) currentRadio.checked = true;
-    settingsOverlay.style.display = 'flex';
-  }
-
-  settingsBtn.addEventListener('click', openSettings);
-
-  settingsCloseBtn.addEventListener('click', () => {
-    settingsOverlay.style.display = 'none';
-  });
-
-  languageRadios.forEach((radio) => {
-    radio.addEventListener('change', () => {
-      const value = radio.value;
-      if (value && supportedLangs.includes(value)) {
-        applyLanguage(value);
-      }
-    });
-  });
-
-  // Toggle "/" shortcut behavior
-  slashToggle.addEventListener('change', () => {
-    chrome.storage.local.set({ slashfocus: slashToggle.checked });
-  });
-
-  // Close settings when clicking outside the modal content
-  settingsOverlay.addEventListener('click', (e) => {
-    if (e.target === settingsOverlay) {
-      settingsOverlay.style.display = 'none';
-    }
+  document.getElementById("settings-btn").addEventListener("click", async () => {
+    const result = await chrome.runtime.sendMessage({ action: "openSettings" }).catch(() => null);
+    if (result?.ok) window.close();
+    else chrome.runtime.openOptionsPage();
   });
 }
 
@@ -412,33 +327,6 @@ document.addEventListener('DOMContentLoaded', function() {
     applyCleanSearchLock(nextValue);
   });
 
-  const keywordBlockingBtn = document.getElementById('keyword-blocking-btn');
-  if (keywordBlockingBtn) {
-    keywordBlockingBtn.addEventListener('click', () => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const tab = tabs && tabs[0];
-        if (!tab || !tab.id) {
-          showPopupAlert(getCurrentPopupMessage('keywordBlockingUnavailable', 'The Video Card Blocking settings panel can only be opened on Bilibili pages.'));
-          return;
-        }
-        chrome.tabs.sendMessage(tab.id, { action: "openKeywordBlockingPanel" }, () => {
-          if (chrome.runtime.lastError) {
-            showPopupAlert(getCurrentPopupMessage('keywordBlockingUnavailable', 'The Video Card Blocking settings panel can only be opened on Bilibili pages.'));
-            return;
-          }
-          window.close();
-        });
-      });
-    });
-  }
-
-  const rightNavLeftToggle = document.getElementById('cleansearchrightnavleft-toggle');
-  if (rightNavLeftToggle) {
-    rightNavLeftToggle.addEventListener('change', function() {
-      updateStorage('cleansearchrightnavleft', this.checked);
-    });
-  }
-
   // Scroll behaviour control
   const choicesContainer = document.querySelector(".choices_container");
   const popupMaxHeight = 560;
@@ -525,6 +413,13 @@ if (feedbackLink && feedbackOverlay) {
     showPopupAlert(getCurrentPopupMessage('modalText', 'For feedback, please email waterlemon0096@gmail.com.'));
   });
 }
+
+document.getElementById("support-link").addEventListener("click", async (event) => {
+  event.preventDefault();
+  const result = await chrome.runtime.sendMessage({ action: "openSettings", section: "support" }).catch(() => null);
+  if (!result?.ok) await chrome.tabs.create({ url: chrome.runtime.getURL("settings/index.html#support") });
+  window.close();
+});
 
 if (feedbackCloseBtn && feedbackOverlay) {
   feedbackCloseBtn.addEventListener("click", () => {

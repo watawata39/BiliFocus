@@ -28,12 +28,14 @@
     "language",
     "cleansearchbackground",
     "keywordblockrules",
+    "intentionCheck",
   ];
   let revealScheduled = false;
   let revealed = false;
+  let redirecting = false;
 
   const finishReveal = () => {
-    if (revealed) return;
+    if (revealed || redirecting) return;
     revealed = true;
     if (root) root.removeAttribute("data-bili-focus-preparing");
   };
@@ -41,7 +43,8 @@
   const failSafeTimer = setTimeout(finishReveal, 2000);
   if (root) root.setAttribute("data-bili-focus-preparing", "");
 
-  const revealPage = () => {
+  const revealPage = async () => {
+    await intentionReady;
     if (revealed || revealScheduled) return;
     revealScheduled = true;
     const reveal = () => {
@@ -69,6 +72,26 @@
       console.warn("BiliFocus could not request its startup settings:", error);
       resolve({});
     }
+  });
+
+  // Disabled visits use the existing storage read without a session-message round trip.
+  const checkVisit = async data => {
+    if (window.top !== window || data.intentionCheck?.enabled !== true) return;
+    const result = await chrome.runtime.sendMessage({ action: "intentionVisit" });
+    if (result?.redirect) redirecting = true;
+  };
+  const intentionReady = settingsReady.then(checkVisit).catch(() => {});
+  window.addEventListener("pageshow", event => {
+    if (!event.persisted || window.top !== window) return;
+    revealed = false;
+    redirecting = false;
+    if (root) root.setAttribute("data-bili-focus-preparing", "");
+    const timeout = setTimeout(finishReveal, 2000);
+    // Preferences may have changed while this document was in the back/forward cache.
+    chrome.storage.local.get("intentionCheck").then(checkVisit).catch(() => {}).finally(() => {
+      clearTimeout(timeout);
+      finishReveal();
+    });
   });
 
   globalThis.biliFocusBootstrap = {

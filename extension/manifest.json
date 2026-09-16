@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "__MSG_extDesc__",
   "default_locale": "zh_CN",
-  "permissions": ["storage"],
+  "permissions": ["storage", "tabs", "webNavigation", "alarms"],
+  "options_ui": {"page": "settings/index.html", "open_in_tab": true},
   "background": {
     "service_worker": "background.js"
   },
@@ -12,7 +13,7 @@
     {
       "matches": ["*://*.bilibili.com/*"],
       "css": ["content/preload.css"],
-      "js": ["content/bootstrap.js", "content/clean-search.js", "content/keyword-blocking.js", "content/main.js"],
+      "js": ["content/bootstrap.js", "content/clean-search.js", "shared/keyword-rules.js", "content/keyword-blocking.js", "content/main.js"],
       "run_at": "document_start"
     }
   ],

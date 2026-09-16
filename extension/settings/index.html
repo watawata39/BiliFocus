@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BiliFocus</title>
+  <link rel="icon" href="../icons/logo32.png">
+  <link rel="stylesheet" href="keyword-editor.css">
+  <link rel="stylesheet" href="settings.css">
+  <script src="../shared/page-ui.js" defer></script>
+  <script src="../shared/intention.js" defer></script>
+  <script src="../shared/keyword-rules.js" defer></script>
+  <script src="keyword-editor.js" defer></script>
+  <script src="settings.js" defer></script>
+</head>
+<body hidden aria-busy="true">
+  <header class="app-header"><a class="brand" href="#general"><img src="../icons/logo48.png" alt="">BiliFocus</a><span data-i18n="settings">Settings</span><output id="save-status" role="status"></output></header>
+  <div class="layout">
+    <nav aria-label="Settings">
+      <a href="#general" data-i18n="general">General</a>
+      <a href="#clean" data-i18n="clean">Clean Search</a>
+      <a href="#blocking" data-i18n="blocking">Video Card Blocking</a>
+      <a href="#intention" data-i18n="intention">Intention Check</a>
+      <a href="#support" data-i18n="support">Support</a>
+    </nav>
+    <main>
+      <section id="general" aria-labelledby="general-title">
+        <h1 id="general-title" data-i18n="general">General</h1>
+        <div class="setting-row"><label for="language" data-i18n="language">Language</label><select id="language"><option value="zh">简体中文</option><option value="en">English</option><option value="ja">日本語</option></select></div>
+        <label class="setting-row"><span data-i18n="shortcut">Focus search with /</span><input type="checkbox" role="switch" class="switch" id="slashfocus"></label>
+      </section>
+      <section id="clean" hidden aria-labelledby="clean-title">
+        <h1 id="clean-title" data-i18n="clean">Clean Search</h1>
+        <label class="setting-row"><span data-i18n="navLeft">Move right navigation to the left</span><input type="checkbox" role="switch" class="switch" id="cleansearchrightnavleft"></label>
+        <p class="note" data-i18n="navNote"></p>
+        <h2 data-i18n="wallpaper">Wallpapers</h2>
+        <p class="note"><span data-i18n="wallpaperNoteBeforeIcon"></span><span class="wallpaper-icon" aria-hidden="true"><img src="../icons/pen.svg" alt="" width="14" height="14"></span><span data-i18n="wallpaperNoteAfterIcon"></span></p>
+      </section>
+      <section id="blocking" hidden aria-labelledby="blocking-title"><h1 id="blocking-title" data-i18n="blocking">Video Card Blocking</h1><div id="blocking-editor"></div></section>
+      <section id="intention" hidden aria-labelledby="intention-title">
+        <h1 id="intention-title" data-i18n="intention">Intention Check</h1>
+        <label class="setting-row"><span data-i18n="enable">Enable Intention Check</span><input type="checkbox" role="switch" class="switch" id="intention-enabled"></label>
+        <p class="note" data-i18n="intentionNote"></p>
+        <div class="setting-row"><label for="countdown" data-i18n="duration">Waiting time</label><div class="quantity"><input id="countdown" type="number" min="1" max="120" step="1" required><span data-i18n="seconds">seconds</span></div></div>
+        <div class="setting-row"><label for="interval" data-i18n="interval">Time away before another check</label><div class="quantity"><input id="interval" type="number" min="1" max="1440" step="1" required><span data-i18n="minutes">minutes</span></div></div>
+        <label class="field-label" for="reminder"><span data-i18n="reminder">Personal reminder</span><small data-i18n="optional">Optional</small></label>
+        <textarea id="reminder" maxlength="300" rows="3" data-placeholder="reminderHint"></textarea>
+        <button id="preview" class="command" type="button" data-i18n="preview">Preview</button>
+      </section>
+      <section id="support" hidden aria-labelledby="support-title">
+        <h1 id="support-title" data-i18n="support">Support</h1>
+        <p class="support-message" data-i18n="supportMessage"></p>
+        <img class="support-code" src="images/wechat-payment.jpg" width="720" height="720" alt="WeChat donation code" data-alt="wechatCode">
+      </section>
+    </main>
+  </div>
+</body>
+</html>

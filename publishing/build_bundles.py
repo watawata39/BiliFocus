@@ -132,7 +132,9 @@ def firefox_manifest(manifest: dict) -> dict:
 
     service_worker = background.get("service_worker")
     if service_worker:
-        patched_manifest["background"] = {"scripts": [service_worker]}
+        patched_manifest["background"] = {"scripts": [
+            "shared/intention.js", "background/intention.js", service_worker,
+        ]}
     elif "scripts" not in background:
         raise SystemExit(
             "Firefox bundle needs background.scripts, but no service_worker "

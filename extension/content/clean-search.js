@@ -8,7 +8,7 @@ const CLEAN_SEARCH_LOCKED_SETTINGS = ["homepagerecom", "searchrecom", "ads"];
 // unchanged and add selectors scoped to these wrappers. Named roles also avoid
 // shifting settings when the overseas header omits VIP. Logged-out triggers use
 // data-idx instead; :is() keeps unsupported :has() branches from invalidating
-// the legacy rules in older browsers. See docs/header-compatibility.md.
+// the legacy rules in older browsers.
 const BILI_FOCUS_WRAPPED_RIGHT_NAV_ITEMS = {
   membership: ".right-entry > .right-entry__main > .vip-entry",
   messages: '.right-entry > .right-entry__main > :is(.message-entry, :has(> [data-idx="message"]))',
@@ -1921,6 +1921,14 @@ function getCleanSearchModeStyle() {
       margin-left: 0 !important;
     }
 
+    /* Avatar flyouts open inward; padding keeps the path from the trigger hoverable. */
+    .bili-focus-clean-search-mode .right-entry .header-avatar-wrap .avatar-panel-popover .v-popover-wrap > .v-popover:is(.is-right, .is-right-start) {
+      left: auto !important;
+      right: calc(100% - var(--bili-focus-avatar-submenu-shift, 0px)) !important;
+      padding-left: 0 !important;
+      padding-right: calc(var(--bili-focus-avatar-submenu-inset, 0px) + 10px) !important;
+    }
+
     .bili-focus-clean-search-mode #bili-focus-clean-bg-btn {
       position: fixed !important;
       right: calc(var(--bili-focus-clean-stage-right) + 20px) !important;
@@ -2764,6 +2772,40 @@ function getCleanSearchRightPopoverCandidates() {
   return getOutermostCleanSearchPopovers([...rightEntryPopovers, ...bodyPopovers]);
 }
 
+function updateCleanSearchAvatarSubmenus() {
+  const panel = document.querySelector(".bili-focus-clean-search-mode .right-entry .header-avatar-wrap .avatar-panel-popover");
+  if (!panel || !panel.getClientRects().length) return;
+  const panelLeft = (panel.closest(".avatar-popover") || panel).getBoundingClientRect().left;
+
+  // Prepare every trigger when the main menu opens, including lazy flyouts.
+  panel.querySelectorAll(".v-popover-wrap").forEach((wrapper) => {
+    const left = wrapper.getBoundingClientRect().left;
+    const inset = Math.max(0, left - panelLeft);
+    const submenu = wrapper.querySelector(":scope > .v-popover:is(.is-right, .is-right-start)");
+    const content = submenu && submenu.firstElementChild;
+    // On narrow windows, allow overlap with the main menu rather than clipping
+    // the flyout at the left edge. Do not include the previous shift in this measurement.
+    const width = content ? content.getBoundingClientRect().width : 0;
+    const shift = width > 0 ? Math.max(0, 8 - (left - inset - 10 - width)) : 0;
+    wrapper.dataset.biliFocusAvatarSubmenuAnchor = "true";
+    for (const [property, value] of [
+      ["--bili-focus-avatar-submenu-inset", inset],
+      ["--bili-focus-avatar-submenu-shift", shift],
+    ]) {
+      const next = `${Math.round(value * 100) / 100}px`;
+      if (wrapper.style.getPropertyValue(property) !== next) wrapper.style.setProperty(property, next);
+    }
+  });
+}
+
+function clearCleanSearchAvatarSubmenus() {
+  document.querySelectorAll("[data-bili-focus-avatar-submenu-anchor]").forEach((wrapper) => {
+    wrapper.style.removeProperty("--bili-focus-avatar-submenu-inset");
+    wrapper.style.removeProperty("--bili-focus-avatar-submenu-shift");
+    delete wrapper.dataset.biliFocusAvatarSubmenuAnchor;
+  });
+}
+
 function clampCleanSearchRightPopovers() {
   if (!isCleanSearchActive()) return;
 
@@ -2848,6 +2890,7 @@ function clampCleanSearchRightPopovers() {
     element.dataset.biliFocusRightPopoverShift = String(shiftX);
     element.dataset.biliFocusRightPopoverClamped = "true";
   });
+  updateCleanSearchAvatarSubmenus();
 }
 
 function scheduleCleanSearchRightPopoverClamp() {
@@ -2914,6 +2957,7 @@ function closeCleanSearchRightPopoversForNormalMode() {
   const popovers = getCleanSearchRightPopoverCandidates();
 
   popovers.forEach(clearCleanSearchPopoverClamp);
+  clearCleanSearchAvatarSubmenus();
   cleanSearchRightPopoverHoveredItem = null;
 
   if (rightEntry) {
@@ -2959,6 +3003,7 @@ function stopCleanSearchRightPopoverClamp() {
   }
 
   document.querySelectorAll("[data-bili-focus-right-popover-clamped]").forEach(clearCleanSearchPopoverClamp);
+  clearCleanSearchAvatarSubmenus();
   updateCleanSearchRightPopoverCacheStyle();
 }
 

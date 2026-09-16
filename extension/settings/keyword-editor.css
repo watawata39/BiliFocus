@@ -1,0 +1,60 @@
+/* Full-page rule editor. Page colors come from settings.css. */
+#bili-focus-keyword-panel { position:relative; min-width:0; color:var(--text); }
+.bili-focus-keyword-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 20px; border-bottom:1px solid var(--line); margin-bottom:24px; }
+.bili-focus-keyword-tabs { display:flex; align-self:stretch; gap:22px; }
+.bili-focus-keyword-tab { display:flex; align-items:center; gap:8px; min-height:48px; padding:8px 0; background:none; color:var(--muted); border:0; border-bottom:2px solid transparent; font-size:15px; font-weight:600; }
+.bili-focus-keyword-tab.is-active { color:var(--blue); border-bottom-color:var(--blue); }
+.bili-focus-keyword-count { min-width:24px; padding:1px 6px; border-radius:4px; background:var(--surface); color:var(--muted); font:12px/20px Arial,sans-serif; text-align:center; font-variant-numeric:tabular-nums; }
+.bili-focus-keyword-footer-actions { display:flex; flex-wrap:wrap; gap:8px; padding:6px 0; }
+.bili-focus-keyword-footer-button { padding:6px 10px; min-height:34px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--text); font-size:13px; }
+.bili-focus-keyword-footer-button:hover { background:var(--surface); border-color:var(--muted); }
+.bili-focus-keyword-footer-button.is-danger { border-color:transparent; color:#c94b43; }
+.bili-focus-keyword-footer-button.is-danger:hover { background:var(--surface); border-color:#c94b43; }
+.bili-focus-keyword-form { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; margin:0 0 18px; }
+.bili-focus-keyword-input { width:100%; min-width:0; height:44px; padding:0 14px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--text); font-size:15px; }
+.bili-focus-keyword-input::placeholder { color:var(--muted); opacity:1; }
+.bili-focus-keyword-add { padding:8px 18px; min-height:44px; border:1px solid #007bff; border-radius:6px; background:#007bff; color:white; font-size:14px; font-weight:600; }
+.bili-focus-keyword-add:hover { background:#006be0; }
+.bili-focus-keyword-error { margin:0; color:#d92d20; font-size:14px; }
+.bili-focus-keyword-error:not(:empty) { margin-bottom:14px; }
+.bili-focus-keyword-inline-message { display:none; padding:10px 14px; margin:0 0 14px; border:1px solid #007bff40; border-radius:6px; background:#007bff12; color:var(--blue); font-size:14px; }
+.bili-focus-keyword-inline-message.is-visible { display:block; }
+.bili-focus-keyword-inline-message.is-error { border-color:#d92d2040; background:#d92d2012; color:#d94a40; }
+.bili-focus-keyword-list { display:flex; flex-wrap:wrap; align-content:flex-start; align-items:flex-start; gap:10px; min-height:240px; max-height:440px; overflow:auto; padding:8px 8px 24px 0; scrollbar-gutter:stable; }
+.bili-focus-keyword-list.is-regex { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
+.bili-focus-keyword-empty { display:flex; justify-content:center; align-items:center; width:100%; min-height:190px; color:var(--muted); font-size:15px; }
+.bili-focus-keyword-chip,.bili-focus-keyword-row { position:relative; display:flex; align-items:center; min-width:0; max-width:100%; border:1px solid var(--line); background:var(--surface); color:var(--text); padding:0 34px 0 14px; }
+.bili-focus-keyword-chip { height:36px; border-radius:18px; padding:0 14px; }
+.bili-focus-keyword-row { width:100%; height:44px; border-radius:6px; }
+.bili-focus-keyword-text { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; min-width:0; font-size:14px; line-height:22px; }
+.bili-focus-keyword-row .bili-focus-keyword-text { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; }
+.bili-focus-keyword-remove { position:absolute; top:4px; right:4px; width:24px; height:24px; display:grid; place-items:center; padding:0; border:0; border-radius:50%; background:transparent; opacity:0; pointer-events:none; }
+.bili-focus-keyword-chip .bili-focus-keyword-remove { top:-5px; right:-5px; width:18px; height:18px; border:1px solid var(--line); background:var(--bg); }
+.bili-focus-keyword-chip .bili-focus-keyword-remove:focus-visible { outline-offset:1px; }
+.bili-focus-keyword-row .bili-focus-keyword-remove { top:9px; }
+.bili-focus-keyword-remove img { width:11px; height:11px; opacity:.65; }
+.bili-focus-keyword-chip:hover .bili-focus-keyword-remove,.bili-focus-keyword-row:hover .bili-focus-keyword-remove,
+.bili-focus-keyword-chip:focus-within .bili-focus-keyword-remove,.bili-focus-keyword-row:focus-within .bili-focus-keyword-remove { opacity:1; pointer-events:auto; }
+.bili-focus-keyword-remove:hover { background:var(--line); }
+.bili-focus-keyword-footer { display:grid; grid-template-columns:1fr 1fr; gap:24px; border-top:1px solid var(--line); padding-top:20px; }
+.bili-focus-keyword-help { margin:0; color:var(--muted); font-size:13px; line-height:1.65; overflow-wrap:anywhere; }
+.bili-focus-keyword-dialog-overlay { position:fixed; inset:0; z-index:10; display:flex; align-items:center; justify-content:center; padding:24px; background:#0005; }
+.bili-focus-keyword-dialog { width:min(420px,100%); max-height:90vh; overflow:auto; padding:24px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); box-shadow:0 16px 48px #0003; }
+.bili-focus-keyword-dialog-title { margin:0 0 12px; font-size:18px; }
+.bili-focus-keyword-dialog-message { margin:0; font-size:15px; overflow-wrap:anywhere; }
+.bili-focus-keyword-dialog-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin-top:24px; }
+.bili-focus-keyword-dialog-button { min-width:80px; padding:8px 14px; border:1px solid var(--line); border-radius:6px; color:var(--text); background:var(--surface); font-size:14px; }
+.bili-focus-keyword-dialog-button.is-primary { color:#fff; border-color:#007bff; background:#007bff; }
+.bili-focus-keyword-dialog-button.is-danger { color:#fff; border-color:#c8352c; background:#c8352c; }
+@media(prefers-color-scheme:dark) { .bili-focus-keyword-remove img { filter:invert(1); } .bili-focus-keyword-footer-button.is-danger { color:#ee8078; } }
+@media(max-width:700px) {
+  .bili-focus-keyword-toolbar { gap:8px; margin-bottom:18px; }
+  .bili-focus-keyword-tabs { width:100%; gap:24px; }
+  .bili-focus-keyword-footer-actions { padding:0 0 12px; }
+  .bili-focus-keyword-tab { font-size:14px; }
+  .bili-focus-keyword-add { padding:8px 12px; }
+  .bili-focus-keyword-input { font-size:14px; padding:0 10px; }
+  .bili-focus-keyword-footer { grid-template-columns:1fr; gap:12px; }
+  .bili-focus-keyword-list { min-height:200px; max-height:340px; }
+}
+@media(hover:none) { .bili-focus-keyword-remove { opacity:1; pointer-events:auto; } }

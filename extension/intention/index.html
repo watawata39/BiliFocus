@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BiliFocus</title>
+  <link rel="icon" href="../icons/logo32.png">
+  <link rel="stylesheet" href="intention.css">
+  <script src="../shared/page-ui.js" defer></script>
+  <script src="../shared/intention.js" defer></script>
+  <script src="intention.js" defer></script>
+</head>
+<body>
+  <header><span class="brand"><img src="../icons/logo48.png" alt="">BiliFocus</span></header>
+  <main>
+    <span id="preview-label" data-i18n="previewLabel" hidden>Preview</span>
+    <h1 data-i18n="pauseTitle">A moment before Bilibili</h1>
+    <p class="question" data-i18n="pauseNote">Is this how you want to spend your time right now?</p>
+    <p id="reminder" hidden></p>
+    <div class="timer"><span id="countdown" role="timer" aria-live="off">...</span><p id="status" role="status"></p></div>
+    <div class="actions"><button id="leave" type="button" data-i18n="leave">Leave for now</button><button id="continue" type="button" data-i18n="continue" disabled>Continue to Bilibili</button></div>
+    <p class="note" data-i18n="foreground">The countdown pauses while you are away.</p>
+  </main>
+</body>
+</html>

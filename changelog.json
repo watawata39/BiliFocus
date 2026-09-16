@@ -1,11 +1,20 @@
 [
   {
+    "date": "2026-09-16",
+    "version": "2.4.0",
+    "changes": [
+      "添加了防沉迷缓冲页功能",
+      "更新了UI，把设置(除隐藏选择项、清爽搜索开关、壁纸设置)总和成了单独的页面",
+      "增加了打赏入口"
+    ]
+  },
+  {
     "date": "2026-09-11",
     "version": "2.3.3",
     "changes": [
       "添加了新版UI的兼容(目前仅影响部分用户)"
     ],
-    "details": "Added compatibility for Bilibili's bili-header--large header and the right-entry__main / left-entry-main navigation wrappers observed in September 2026. Existing header selectors remain in place. New selectors are scoped to the new wrappers and identify navigation roles without depending on VIP being present. Clean Search banner hiding, navigation visibility, avatar positioning, foreground styling, and dropdown handling now support the new structure. Dropdown offset caches are separated by header structure while legacy cache keys remain unchanged. Source comments and docs/header-compatibility.md document the compatibility assumptions and regression checks."
+    "details": "Added compatibility for Bilibili's bili-header--large header and the right-entry__main / left-entry-main navigation wrappers observed in September 2026. Existing header selectors remain in place. New selectors are scoped to the new wrappers and identify navigation roles without depending on VIP being present. Clean Search banner hiding, navigation visibility, avatar positioning, foreground styling, and dropdown handling now support the new structure. Dropdown offset caches are separated by header structure while legacy cache keys remain unchanged. Source comments document the compatibility assumptions."
   },
   {
     "date": ["2026-09-05", 2],

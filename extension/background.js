@@ -1,3 +1,7 @@
+// Firefox loads these through background.scripts in its generated bundle.
+if (typeof importScripts === "function") {
+  importScripts("shared/intention.js", "background/intention.js");
+}
 const RELEASE_NOTES_METADATA_PATH = "release-notes/metadata.json";
 
 function getReleaseNotesStorageKey(version) {

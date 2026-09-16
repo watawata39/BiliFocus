@@ -15,6 +15,9 @@ Choose exactly which Bilibili sections to hide or show. Settings are saved and a
 * Clean Search Mode
 Turn the Bilibili main page into a peaceful google-like search page, with customisable background.
 
+* Intention Check
+An optional anti-addiction feature that adds a brief pause before browsing Bilibili, giving you a moment to decide whether to continue.
+
 * Video Card Blocking
 Block homepage and search-result video cards by title with keywords or regular expressions.
 

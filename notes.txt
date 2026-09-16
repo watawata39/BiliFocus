@@ -1,4 +1,13 @@
-Clean Search right-nav dropdown compromise
+>>> Current Problems
+
+1. When clean search mode is on, cannot see hover options right to the avatar hover menu
+2. Clean search mode has no support for the dark theme (currently beta). Primarily it makes the search bar dark and messes up the visual balance. 
+
+
+
+
+
+>>> Clean Search right-nav dropdown compromise
 
 Reproduce the problem:
 - Open a brand new bilibili.com page in clean search mode (BiliFocus version 2.1.0 or 2.1.1), and hover the cursor on a right-navi item. There may be a flash: the dropdown appears in the unaltered position, partly out of the window, and is then moved to an appropriate position.

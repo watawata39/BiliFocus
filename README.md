@@ -1,52 +1,58 @@
 # BiliFocus
 
-A browser extension that helps you use [bilibili.com](https://www.bilibili.com) without distractions. Hide recommendations, comments, ads, and other UI elements so you can focus on what you came for.
+让你更专注地使用 [哔哩哔哩](https://www.bilibili.com) 的浏览器扩展。隐藏推荐、评论、广告等不需要的内容，减少干扰，专注于你真正想看的东西。
 
-**Supported browsers:** Chrome, Edge, Firefox.
-
----
-
-## Features
-
-- **Choose what to hide** — All options are optional; settings apply instantly.
-  - **General:** Home page recommendations, video recommendations, video/post comments, search recommendations, top-left navi, all ads.
-  - **Top-right navi:** Membership icon, messages icon, subscription posts icon, favourites icon, history icon, creativity center & post icon.
-  - **Personal homepage** (on your own space page only): My videos, favourites, subscribed animes, recent coins, collections, columns, recent likes, left sidebar.
-- **Clean Search Mode** — Turn the Bilibili main page into a google-style search page. You can also customise the wallpaper! 
-- **Video Card Blocking** — Block homepage and search-result video cards by title with keywords or regular expressions. Keyword settings can be imported and exported.
-- **“/” to search** — Press `/` (like on YouTube) to focus the search bar from anywhere on the site.
-- **Multilingual** — Interface in 简体中文, English, and 日本語.
+**支持的浏览器：** Chrome、Edge、Firefox。
 
 ---
 
-## Installation
+## 主要功能
 
-### Official Installation
-
-- **Chrome:** [Chrome Web Store](https://chromewebstore.google.com/detail/gajajdkempljdpgemhemkbecmenphaff)
-- **Edge:** [Edge Add-On Store](https://microsoftedge.microsoft.com/addons/detail/iagljcobapmdclldjpknlofajmafjdda)
-- **Firefox:** [Firefox Add-On Store](https://addons.mozilla.org/firefox/addon/bilifocus/)
-
-### Or Manually Install
-
-- Please research the method yourself
-
----
-
-## Usage
-
-1. Go on `bilibili.com`.
-2. Click the BiliFocus icon in the toolbar.
-3. Toggle the options you want to hide or show.
-
-Use the **Settings** icon at the top-right corner in the popup to enable/disable Clean Search Mode, switch languages or turn the “/” search shortcut on or off. Use **Block Video Cards** in the popup to manage keyword and regex blocking rules.
+- **灵活控制显示内容**：按需选择要隐藏的内容，设置即时生效。
+  - **一般内容**：首页推荐、视频推荐、视频和动态评论、搜索推荐、左上导航栏、广告。
+  - **右上导航栏**：大会员、消息、动态、收藏、历史、投稿与创作中心图标。
+  - **个人主页**（仅对自己的空间生效）：我的视频、收藏夹、订阅番剧、最近投币的视频、合集和系列、专栏、最近点赞的视频、左侧边栏。
+- **清爽搜索模式**：将 B 站主页变成简洁的搜索页面。
+  - **自定义背景**：支持内置壁纸、纯色背景和自行上传的图片。
+- **访问前停一停**：可选的防沉迷功能，在进入 B 站前稍作停顿，想一想是否要继续浏览。默认关闭。
+- **视频卡片屏蔽**：根据标题关键词或正则表达式屏蔽首页和搜索结果中的视频卡片，支持导入和导出规则。
+- **「/」搜索快捷键**：按下 `/` 即可快速聚焦搜索栏，类似 YouTube 的搜索快捷键。
+- **多语言界面**：支持简体中文、英语和日语。
 
 ---
 
-Contributions are welcome. Please contact me beforehand. Email: [waterlemon0096@gmail.com](mailto:waterlemon0096@gmail.com)
+## 安装
+
+### 官方商店
+
+- **Chrome：** [Chrome 扩展商店](https://chromewebstore.google.com/detail/gajajdkempljdpgemhemkbecmenphaff)
+- **Edge：** [Edge 扩展商店](https://microsoftedge.microsoft.com/addons/detail/iagljcobapmdclldjpknlofajmafjdda)
+- **Firefox：** [Firefox 扩展商店](https://addons.mozilla.org/firefox/addon/bilifocus/)
+
+### 手动安装
+
+可使用 [打包脚本](publishing/build_bundles.py) 生成适用于 Chrome、Edge 和 Firefox 的扩展包，再按所用浏览器支持的方式加载。
 
 ---
 
-## License
+## 使用方法
 
-MIT License: Please see the [LICENSE file](LICENSE).
+1. 打开 B 站网页。
+2. 点击浏览器工具栏中的 BiliFocus 图标。
+3. 勾选或取消勾选，选择要隐藏或显示的内容。
+
+扩展弹窗中保留隐藏选项和**清爽搜索模式**开关。点击右上角的齿轮图标，可打开独立的**设置页**，调整语言、`/` 快捷键、导航栏位置，管理视频卡片屏蔽规则，以及启用**访问前停一停**。
+
+启用清爽搜索模式后，点击 B 站主页右下角的笔图标，即可自定义背景。
+
+设置自动保存在当前设备上。更新后会保留已有偏好和屏蔽规则；如需在其他设备使用屏蔽规则，可通过导入和导出功能转移。
+
+---
+
+欢迎参与开发，请在开始前先联系我。邮箱：[waterlemon0096@gmail.com](mailto:waterlemon0096@gmail.com)。
+
+---
+
+## 许可证
+
+本项目采用 MIT 许可证，详见[许可证文件](LICENSE)。

@@ -623,6 +623,11 @@ chrome.storage.local.get(['slashfocus'], function (result) {
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && Object.prototype.hasOwnProperty.call(changes, 'cleansearchrightnavleft')) {
+    settings.cleansearchrightnavleft = changes.cleansearchrightnavleft.newValue !== false;
+    clean_navigation_bar(false);
+    hideElements(true);
+  }
   if (area === 'local' && Object.prototype.hasOwnProperty.call(changes, 'slashfocus')) {
     enableSlashFocus = !!changes.slashfocus.newValue;
   }
