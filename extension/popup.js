@@ -215,6 +215,9 @@ document.addEventListener('DOMContentLoaded', function() {
   function closeChoicesMenu() {
     const menu = document.getElementById('choices-menu');
     if (!menu) return;
+    if (menu.contains(document.activeElement)) {
+      document.getElementById('choices-menu-btn').focus({ preventScroll: true });
+    }
     menu.classList.remove('is-open');
     menu.setAttribute('aria-hidden', 'true');
   }
@@ -302,8 +305,12 @@ document.addEventListener('DOMContentLoaded', function() {
     choicesMenuBtn.addEventListener('click', (event) => {
       event.stopPropagation();
       const shouldOpen = !choicesMenu.classList.contains('is-open');
-      choicesMenu.classList.toggle('is-open', shouldOpen);
-      choicesMenu.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+      if (shouldOpen) {
+        choicesMenu.classList.add('is-open');
+        choicesMenu.setAttribute('aria-hidden', 'false');
+      } else {
+        closeChoicesMenu();
+      }
     });
   }
   if (selectAllBtn) selectAllBtn.addEventListener('click', () => setAllOptions(true));

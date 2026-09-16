@@ -1,4 +1,4 @@
-const RELEASE_ORDER = [];
+const RELEASE_ORDER = ["2.4.0"];
 
 const PAGE_MESSAGES = {
   zh: {
@@ -21,7 +21,73 @@ const PAGE_MESSAGES = {
   },
 };
 
-const RELEASE_NOTES = {};
+const RELEASE_NOTES = {
+  "2.4.0": {
+    zh: {
+      version: "2.4.0",
+      subtitle: "独立的设置页面，以及新的防沉迷功能：访问前停一停。",
+      features: [
+        {
+          title: "从齿轮图标打开设置",
+          body: "设置现在移到了独立页面。点击插件弹窗右上角的齿轮图标，即可调整常规设置、清爽搜索和视频卡片屏蔽等选项。隐藏选项和清爽搜索开关仍保留在弹窗中。",
+          image: "images/gear_item_in_popup.jpg",
+        },
+        {
+          title: "访问前停一停",
+          body: "新增可选的防沉迷功能，默认关闭。你可以在设置中的「访问前停一停」启用它，调整等待时间、离开多久后再次提醒，并写下给自己的提醒。也可以先预览效果。",
+          image: "images/intentions_check_settings_page.jpg",
+        },
+        {
+          title: "给自己一点时间，再决定是否继续",
+          body: "启用后，在新一轮 B 站浏览开始前，会先显示一个简短的倒计时页面。倒计时结束后可以选择继续，也可以随时暂时离开。选择继续后，各标签页均可正常浏览，不会每打开一个页面就提醒；离开达到设定时长后，下次页面跳转时才会再次提醒。离开倒计时页面时，倒计时会暂停。",
+          image: "images/buffer_page.jpg",
+        },
+      ],
+    },
+    en: {
+      version: "2.4.0",
+      subtitle: "A dedicated settings page and a new anti-addiction feature: Intention Check.",
+      features: [
+        {
+          title: "Open Settings from the Gear Icon",
+          body: "Settings now has its own page. Click the gear icon in the top-right corner of the extension popup to adjust general settings, Clean Search, Video Card Blocking, and more. Visibility controls and the Clean Search switch remain in the popup.",
+          image: "images/gear_item_in_popup.jpg",
+        },
+        {
+          title: "Intention Check",
+          body: "This optional anti-addiction feature is off by default. Enable it in the Intention Check section of settings, choose the waiting time and how long away triggers another check, and add a personal reminder. You can preview it before using it.",
+          image: "images/intentions_check_settings_page.jpg",
+        },
+        {
+          title: "Pause Before You Continue",
+          body: "When enabled, a short countdown appears before a new Bilibili browsing session. Once it finishes, you can continue, or choose to leave at any time. Continuing allows browsing across your tabs without a check on every page. After you spend the chosen interval away, the next navigation triggers another check. The countdown pauses while you are away from its page.",
+          image: "images/buffer_page.jpg",
+        },
+      ],
+    },
+    ja: {
+      version: "2.4.0",
+      subtitle: "独立した設定ページと、新しい使いすぎ防止機能「アクセス前の確認」を追加しました。",
+      features: [
+        {
+          title: "歯車アイコンから設定を開く",
+          body: "設定が独立したページに移りました。拡張機能のポップアップ右上にある歯車アイコンから、一般設定、クリーンサーチ、動画カードブロックなどを設定できます。非表示にする項目の選択とクリーンサーチのスイッチは、引き続きポップアップにあります。",
+          image: "images/gear_item_in_popup.jpg",
+        },
+        {
+          title: "アクセス前の確認",
+          body: "任意で使える使いすぎ防止機能です。初期状態ではオフになっています。設定の「アクセス前の確認」で有効にすると、待ち時間、再び確認するまでの離席時間、自分へのメッセージを設定できます。プレビューで確認することもできます。",
+          image: "images/intentions_check_settings_page.jpg",
+        },
+        {
+          title: "ひと息ついてから、続けるか決める",
+          body: "有効にすると、Bilibili を見始める前に短いカウントダウンが表示されます。終了後は閲覧を続けられ、途中でも離れることができます。続行後は他のタブでも閲覧でき、ページを開くたびに確認することはありません。設定した時間だけ離れると、次のページへの移動時に再び確認します。カウントダウンのページから離れている間は、一時停止します。",
+          image: "images/buffer_page.jpg",
+        },
+      ],
+    },
+  },
+};
 
 function getReleaseNotesLanguage() {
   const language = (navigator.language || "").toLowerCase();
@@ -32,7 +98,7 @@ function getReleaseNotesLanguage() {
 
 function getRequestedVersions() {
   const params = new URLSearchParams(window.location.search);
-  const rawVersions = params.get("versions") || params.get("version") || "";
+  const rawVersions = params.get("versions") || params.get("version") || RELEASE_ORDER[RELEASE_ORDER.length - 1];
   const requested = rawVersions
     .split(",")
     .map((version) => version.trim())
