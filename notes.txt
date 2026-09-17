@@ -1,7 +1,6 @@
 >>> Current Problems
 
-1. When clean search mode is on, cannot see hover options right to the avatar hover menu
-2. Clean search mode has no support for the dark theme (currently beta). Primarily it makes the search bar dark and messes up the visual balance. 
+1. Clean search mode has no support for the dark theme (currently beta). Primarily it makes the search bar dark and messes up the visual balance. 
 
 
 
