@@ -1,12 +1,11 @@
 // Map stored language preference to _locales folder name
 const langToLocale = { zh: 'zh_CN', en: 'en', ja: 'ja' };
-const supportedLangs = ['zh', 'en', 'ja'];
 const cleanSearchLockedKeys = ['homepagerecom', 'searchrecom', 'ads'];
 
 // Cached messages per locale (from _locales/<locale>/messages.json)
 let messagesCache = {};
 let currentMessages = null;
-let currentLanguage = 'en';
+let currentLanguage = BiliFocusLanguage.resolve();
 let cleanSearchModeEnabled = true;
 
 function adjust_button() {
@@ -127,9 +126,9 @@ function updateCleanSearchLockText() {
 }
 
 function setupLanguageSwitching() {
-  chrome.storage.local.get("language", result => applyLanguage(supportedLangs.includes(result.language) ? result.language : "en"));
+  chrome.storage.local.get("language", result => applyLanguage(BiliFocusLanguage.resolve(result.language)));
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes.language) applyLanguage(supportedLangs.includes(changes.language.newValue) ? changes.language.newValue : "en");
+    if (area === "local" && changes.language) applyLanguage(BiliFocusLanguage.resolve(changes.language.newValue));
   });
   document.getElementById("settings-btn").addEventListener("click", async () => {
     const result = await chrome.runtime.sendMessage({ action: "openSettings" }).catch(() => null);

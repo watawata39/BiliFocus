@@ -34,10 +34,10 @@ const PAGE_MESSAGES = {
     pauseTitle: "Bilibili の前に、ひと息", pauseNote: "今、この時間をどう使いたいですか？", continue: "Bilibili へ進む", leave: "今はやめる", waiting: "ひと休み", ready: "あなたの選択", previewLabel: "プレビュー", closePreview: "プレビューを閉じる", unavailable: "このアクセスは無効です。Bilibili をもう一度開いてください。", connection: "接続できません。再接続中…", foreground: "このページを離れると、カウントダウンは一時停止します。",
   },
 };
-let pageLanguage = "en";
+let pageLanguage = BiliFocusLanguage.resolve();
 function pageText(key) { return (PAGE_MESSAGES[pageLanguage] || PAGE_MESSAGES.en)[key] || PAGE_MESSAGES.en[key] || key; }
 function localizePage(language) {
-  pageLanguage = Object.hasOwn(PAGE_MESSAGES, language) ? language : "en";
+  pageLanguage = BiliFocusLanguage.resolve(language);
   document.documentElement.lang = pageLanguage === "zh" ? "zh-CN" : pageLanguage;
   document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = pageText(el.dataset.i18n); });
   document.querySelectorAll("[data-placeholder]").forEach(el => { el.placeholder = pageText(el.dataset.placeholder); });

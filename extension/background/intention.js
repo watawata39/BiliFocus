@@ -106,6 +106,8 @@
   }
   async function bufferAction(message, sender) {
     const tab = sender.tab;
+    // Ignore late messages from a buffer that this tab has already left.
+    if (!tab || !sender.url?.startsWith(bufferUrl) || (await chrome.tabs.get(tab.id)).url !== sender.url) return { error: true };
     // A restored tab can message before onStartup has remapped its old tab ID.
     let p = tab && pending[tab.id];
     if (tab && sender.url?.startsWith(bufferUrl) && (!p || p.token !== message.token)) {
@@ -173,7 +175,20 @@
   });
   chrome.tabs.onActivated.addListener(() => { serial(trackFocus); });
   chrome.windows.onFocusChanged.addListener(() => { serial(trackFocus); });
-  chrome.tabs.onUpdated.addListener((_id, changes) => { if (changes.url) serial(trackFocus); });
+  chrome.tabs.onUpdated.addListener((id, changes) => {
+    if (!changes.url) return;
+    serial(async () => {
+      const p = pending[id];
+      if (p && !policy.isBilibili(changes.url) && changes.url.split("#")[0] !== `${bufferUrl}?token=${p.token}`) {
+        // Navigation away starts a new wait; switching tabs only pauses it.
+        // Keep the token so browser Back can reopen the buffer with a full timer.
+        p.remaining = config.countdownSeconds * 1000;
+        p.tickAt = null;
+        redirects.delete(id);
+      }
+      await trackFocus();
+    });
+  });
   chrome.tabs.onRemoved.addListener(id => { serial(async () => {
     redirects.delete(id);
     delete pending[id];

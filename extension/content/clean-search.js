@@ -228,7 +228,7 @@ const CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STORAGE_KEY = "cleansearchrightpopovercac
 const CLEAN_SEARCH_RIGHT_POPOVER_CACHE_STYLE_ID = "bili-focus-style-cleansearch-popover-cache";
 const CLEAN_SEARCH_RIGHT_POPOVER_CACHE_MAX_ENTRIES = 96;
 const CLEAN_SEARCH_RIGHT_POPOVER_SELECTOR = ".v-popover:not(.v-popover-wrap)";
-let cleanSearchLanguage = "zh";
+let cleanSearchLanguage = BiliFocusLanguage.resolve();
 let cleanSearchBackgroundState = { ...CLEAN_SEARCH_DEFAULT_BACKGROUND };
 let cleanSearchUploadedWallpaper = "";
 let cleanSearchCustomColor = CLEAN_SEARCH_DEFAULT_COLOR;
@@ -274,7 +274,7 @@ function shouldHideSetting(key) {
 }
 
 function getCleanSearchMessage(key) {
-  const messages = CLEAN_SEARCH_UI_MESSAGES[cleanSearchLanguage] || CLEAN_SEARCH_UI_MESSAGES.zh;
+  const messages = CLEAN_SEARCH_UI_MESSAGES[cleanSearchLanguage] || CLEAN_SEARCH_UI_MESSAGES.en;
   return messages[key] || CLEAN_SEARCH_UI_MESSAGES.en[key] || key;
 }
 
@@ -2415,7 +2415,7 @@ function updateCleanSearchBackgroundButton(shouldShow) {
 }
 
 function getCleanSearchBadgeText() {
-  return CLEAN_SEARCH_BADGE_MESSAGES[cleanSearchLanguage] || CLEAN_SEARCH_BADGE_MESSAGES.zh;
+  return CLEAN_SEARCH_BADGE_MESSAGES[cleanSearchLanguage] || CLEAN_SEARCH_BADGE_MESSAGES.en;
 }
 
 function getCleanSearchBrandText() {
@@ -2423,7 +2423,7 @@ function getCleanSearchBrandText() {
 }
 
 function updateCleanSearchLanguage(lang) {
-  cleanSearchLanguage = Object.prototype.hasOwnProperty.call(CLEAN_SEARCH_BADGE_MESSAGES, lang) ? lang : "zh";
+  cleanSearchLanguage = BiliFocusLanguage.resolve(lang);
   const pill = document.querySelector("#bili-focus-clean-brand .bili-focus-clean-brand-pill");
   if (pill) pill.textContent = getCleanSearchBrandText();
   updateCleanSearchBackgroundUiText();

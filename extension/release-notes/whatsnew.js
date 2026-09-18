@@ -89,13 +89,6 @@ const RELEASE_NOTES = {
   },
 };
 
-function getReleaseNotesLanguage() {
-  const language = (navigator.language || "").toLowerCase();
-  if (language.startsWith("ja")) return "ja";
-  if (language.startsWith("zh")) return "zh";
-  return "en";
-}
-
 function getRequestedVersions() {
   const params = new URLSearchParams(window.location.search);
   const rawVersions = params.get("versions") || params.get("version") || RELEASE_ORDER[RELEASE_ORDER.length - 1];
@@ -169,8 +162,8 @@ function createReleaseSection(notes) {
   return section;
 }
 
-function renderReleaseNotes() {
-  const language = getReleaseNotesLanguage();
+function renderReleaseNotes(preference) {
+  const language = BiliFocusLanguage.resolve(preference);
   const pageMessages = PAGE_MESSAGES[language] || PAGE_MESSAGES.en;
   const versions = getRequestedVersions();
   const notesList = versions.map((version) => RELEASE_NOTES[version][language] || RELEASE_NOTES[version].en);
@@ -197,4 +190,22 @@ document.getElementById("close").addEventListener("click", () => {
   window.close();
 });
 
-renderReleaseNotes();
+async function initializeReleaseNotes() {
+  let preference;
+  try {
+    const data = await chrome.storage.local.get("language");
+    preference = data.language;
+  } catch (_) {
+    // Direct file previews have no extension storage; use browser detection.
+  }
+  renderReleaseNotes(preference);
+}
+
+initializeReleaseNotes().finally(() => {
+  document.body.removeAttribute("aria-busy");
+  document.body.hidden = false;
+});
+
+globalThis.chrome?.storage?.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.language) renderReleaseNotes(changes.language.newValue);
+});

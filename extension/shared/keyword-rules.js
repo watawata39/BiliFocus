@@ -99,7 +99,7 @@ const KEYWORD_BLOCKING_MESSAGES = {
 };
 
 let keywordBlockingRules = [];
-let keywordBlockingLanguage = "en";
+let keywordBlockingLanguage = BiliFocusLanguage.resolve();
 
 function getKeywordBlockingMessage(key) {
   const messages = KEYWORD_BLOCKING_MESSAGES[keywordBlockingLanguage] || KEYWORD_BLOCKING_MESSAGES.en;
@@ -113,7 +113,7 @@ function formatKeywordBlockingMessage(key, values = {}) {
 }
 
 function getKeywordBlockingLanguage(value) {
-  return Object.prototype.hasOwnProperty.call(KEYWORD_BLOCKING_MESSAGES, value) ? value : "en";
+  return BiliFocusLanguage.resolve(value);
 }
 
 function getKeywordBlockingId() {
