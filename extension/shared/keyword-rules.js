@@ -143,6 +143,12 @@ function getKeywordBlockingDuplicateKey(type, raw, source, flags) {
   return `keyword:${raw.trim().toLocaleLowerCase()}`;
 }
 
+function isUnsafeKeywordBlockingRegex(source) {
+  // Rejects nested quantifiers like (a+)+, (a*)*, (a+)* which can trigger
+  // catastrophic backtracking (exponential-time matching) in the regex engine.
+  return /\([^()]*[+*][^()]*\)[+*]/.test(source);
+}
+
 function normalizeKeywordBlockingRule(rule) {
   if (!rule || typeof rule !== "object") return null;
   const type = rule.type === "regex" ? "regex" : "keyword";
@@ -150,6 +156,7 @@ function normalizeKeywordBlockingRule(rule) {
   const source = typeof rule.source === "string" ? rule.source : "";
   const flags = sanitizeKeywordBlockingFlags(rule.flags);
   if (!raw || !source) return null;
+  if (type === "regex" && isUnsafeKeywordBlockingRegex(source)) return null;
   try {
     new RegExp(source, flags);
   } catch (_) {
